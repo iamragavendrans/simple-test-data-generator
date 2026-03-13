@@ -1,3 +1,5 @@
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
 # Test Data Generator · QA Tools v3
 
 Pure-frontend test data generator with a full REST API backend.  
