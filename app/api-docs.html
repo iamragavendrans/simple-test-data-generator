@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>API Docs · Test Data Generator</title>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#07071a;--surface:#0f0f26;--raised:#161630;--card:#1c1c3a;
+      --accent:#6c63ff;--accent2:#a78bfa;--glow:rgba(108,99,255,.25);
+      --border:rgba(255,255,255,.08);--text:#e2e8f0;--sub:#94a3b8;--muted:#475569;
+      --green:#22c55e;--blue:#38bdf8;--orange:#fb923c;
+    }
+    body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI',system-ui,sans-serif;line-height:1.6;min-height:100vh}
+    .page{max-width:960px;margin:0 auto;padding:48px 28px 80px}
+    .back{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--sub);text-decoration:none;margin-bottom:32px;padding:7px 14px;border:1px solid var(--border);border-radius:8px;transition:all .15s}
+    .back:hover{color:var(--text);border-color:rgba(108,99,255,.4)}
+    h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+    .subtitle{color:var(--sub);font-size:15px;margin-bottom:40px}
+    h2{font-size:17px;font-weight:700;color:var(--text);margin:36px 0 14px;padding-left:12px;border-left:3px solid var(--accent)}
+    h3{font-size:14px;font-weight:700;color:var(--accent2);margin:20px 0 10px}
+    p{color:var(--sub);font-size:14px;margin-bottom:12px}
+
+    /* Endpoint cards */
+    .endpoint{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden}
+    .ep-header{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--raised)}
+    .method{font-size:11px;font-weight:800;letter-spacing:.6px;padding:4px 10px;border-radius:6px;flex-shrink:0}
+    .method.get {background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+    .method.post{background:rgba(56,189,248,.15);color:#38bdf8;border:1px solid rgba(56,189,248,.3)}
+    .path{font-family:'Consolas','Courier New',monospace;font-size:14px;font-weight:600;color:var(--text)}
+    .ep-desc{padding:12px 18px 4px;font-size:13px;color:var(--sub)}
+
+    /* Code blocks */
+    .code-wrap{margin:12px 16px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+    .code-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;padding:8px 14px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border)}
+    pre{padding:14px;overflow-x:auto;font-family:'Consolas','Courier New',monospace;font-size:12.5px;line-height:1.65;color:var(--sub)}
+    .k{color:#c084fc}.s{color:#4ade80}.n{color:#38bdf8}.v{color:#fb923c}
+
+    /* Type table */
+    .type-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-bottom:8px}
+    .type-chip{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px}
+    .type-chip .cat{font-size:14px}
+    .type-chip .id{font-family:'Consolas','Courier New',monospace;color:var(--accent2);font-weight:600}
+    .type-chip .lbl{color:var(--sub);font-size:11px}
+
+    /* Response schema */
+    .schema{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px 18px;margin:10px 0 16px}
+    .schema-row{display:flex;gap:14px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+    .schema-row:last-child{border-bottom:none}
+    .schema-key{font-family:'Consolas','Courier New',monospace;font-size:13px;color:var(--blue);width:110px;flex-shrink:0}
+    .schema-type{font-size:11px;color:var(--orange);width:70px;flex-shrink:0;padding-top:2px}
+    .schema-desc{font-size:13px;color:var(--sub)}
+
+    /* Note box */
+    .note{background:rgba(108,99,255,.08);border:1px solid rgba(108,99,255,.25);border-radius:8px;padding:13px 16px;font-size:13px;color:var(--sub);margin:10px 0 20px}
+    .note strong{color:var(--accent2)}
+
+    /* Live tester */
+    .tester{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:10px}
+    .tester-row{display:flex;gap:10px;align-items:flex-end;margin-bottom:14px;flex-wrap:wrap}
+    .tester label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:6px}
+    .tester input,.tester select{
+      background:var(--card);border:1px solid var(--border);border-radius:8px;
+      color:var(--text);font-size:13px;padding:9px 12px;font-family:inherit;outline:none;
+      transition:border-color .15s;
+    }
+    .tester input:focus,.tester select:focus{border-color:var(--accent)}
+    .tester input[type=number]{width:80px}
+    .tester select{min-width:160px}
+    .run-btn{padding:10px 22px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:all .16s;white-space:nowrap}
+    .run-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px var(--glow)}
+    #testOutput{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:'Consolas','Courier New',monospace;font-size:12px;color:#4ade80;min-height:80px;white-space:pre-wrap;word-break:break-all;display:none}
+    #testError{color:#f87171;display:none}
+  </style>
+</head>
+<body>
+<div class="page">
+  <a class="back" href="/">← Back to App</a>
+
+  <h1>REST API Reference</h1>
+  <p class="subtitle">Full programmatic access to all 28 data generators. No auth required. Works from any client.</p>
+
+  <!-- Base URL -->
+  <h2>Base URL</h2>
+  <div class="code-wrap">
+    <div class="code-label">local development</div>
+    <pre><span class="v">http://localhost:8080</span></pre>
+  </div>
+  <div class="note"><strong>Note:</strong> The API is served by the same <code>server.py</code> that serves the app. Start it with <code>python server.py</code> (or <code>start.bat</code> on Windows).</div>
+
+  <!-- Endpoints -->
+  <h2>Endpoints</h2>
+
+  <div class="endpoint">
+    <div class="ep-header">
+      <span class="method get">GET</span>
+      <span class="path">/api/categories</span>
+    </div>
+    <div class="ep-desc">List all categories and the types they contain.</div>
+    <div class="code-wrap">
+      <div class="code-label">example response</div>
+      <pre>{
+  <span class="k">"categories"</span>: [
+    { <span class="k">"id"</span>: <span class="s">"identifiers"</span>, <span class="k">"name"</span>: <span class="s">"Identifiers &amp; Security"</span>, <span class="k">"icon"</span>: <span class="s">"🔑"</span>,
+      <span class="k">"types"</span>: [<span class="s">"uuid"</span>, <span class="s">"hash"</span>, <span class="s">"password"</span>, <span class="s">"username"</span>] },
+    { <span class="k">"id"</span>: <span class="s">"network"</span>,     <span class="k">"name"</span>: <span class="s">"Network &amp; Web"</span>,          <span class="k">"icon"</span>: <span class="s">"🌐"</span>,
+      <span class="k">"types"</span>: [<span class="s">"ip"</span>, <span class="s">"url"</span>, <span class="s">"mac_address"</span>, <span class="s">"imei"</span>] },
+    <span class="n">// ... 5 more categories</span>
+  ]
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="ep-header">
+      <span class="method get">GET</span>
+      <span class="path">/api/types</span>
+    </div>
+    <div class="ep-desc">Flat list of all supported type IDs.</div>
+    <div class="code-wrap">
+      <div class="code-label">example response</div>
+      <pre>{ <span class="k">"types"</span>: [<span class="s">"uuid"</span>, <span class="s">"hash"</span>, <span class="s">"password"</span>, <span class="s">"username"</span>, <span class="s">"name"</span>, <span class="s">"email"</span>, <span class="n">...28 total</span>] }</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="ep-header">
+      <span class="method get">GET</span>
+      <span class="path">/api/generate?type=<span style="color:var(--orange)">{type}</span>&amp;count=<span style="color:var(--orange)">{n}</span>&amp;[options]</span>
+    </div>
+    <div class="ep-desc">Generate data via query string. All type-specific options can be appended as extra parameters.</div>
+    <div class="code-wrap">
+      <div class="code-label">curl examples</div>
+      <pre>curl "http://localhost:8080/api/generate?type=uuid&count=5"
+curl "http://localhost:8080/api/generate?type=password&count=3&length=24&special=true"
+curl "http://localhost:8080/api/generate?type=credit_card&count=2&card_type=Visa"
+curl "http://localhost:8080/api/generate?type=mac_address&count=5&separator=-&uppercase=false"
+curl "http://localhost:8080/api/generate?type=ip&count=4&version=ipv6"
+curl "http://localhost:8080/api/generate?type=date&count=5&format=us&from_year=1990&to_year=2024"</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="ep-header">
+      <span class="method post">POST</span>
+      <span class="path">/api/generate</span>
+    </div>
+    <div class="ep-desc">Generate data via JSON body. Preferred for complex options.</div>
+    <div class="code-wrap">
+      <div class="code-label">request body schema</div>
+      <div class="schema">
+        <div class="schema-row"><span class="schema-key">type</span><span class="schema-type">string*</span><span class="schema-desc">The data type ID (see full list below). Required.</span></div>
+        <div class="schema-row"><span class="schema-key">count</span><span class="schema-type">integer</span><span class="schema-desc">Number of values to generate. Default: 10. Max: 1000.</span></div>
+        <div class="schema-row"><span class="schema-key">options</span><span class="schema-type">object</span><span class="schema-desc">Type-specific options (see per-type table below). Optional.</span></div>
+      </div>
+    </div>
+    <div class="code-wrap">
+      <div class="code-label">curl examples</div>
+      <pre>curl -X POST http://localhost:8080/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{"type":"password","count":5,"options":{"length":32,"special":true}}'
+
+curl -X POST http://localhost:8080/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{"type":"address","count":3,"options":{"country":"JP"}}'
+
+curl -X POST http://localhost:8080/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{"type":"credit_card","count":10,"options":{"card_type":"Mastercard","valid":"valid"}}'</pre>
+    </div>
+    <div class="code-wrap">
+      <div class="code-label">response schema</div>
+      <div class="schema">
+        <div class="schema-row"><span class="schema-key">type</span><span class="schema-type">string</span><span class="schema-desc">The requested type ID.</span></div>
+        <div class="schema-row"><span class="schema-key">count</span><span class="schema-type">integer</span><span class="schema-desc">Number of items returned.</span></div>
+        <div class="schema-row"><span class="schema-key">options</span><span class="schema-type">object</span><span class="schema-desc">Options that were applied.</span></div>
+        <div class="schema-row"><span class="schema-key">data</span><span class="schema-type">string[]</span><span class="schema-desc">Array of generated values.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- All types -->
+  <h2>All 28 Supported Types</h2>
+
+  <h3>🔑 Identifiers & Security</h3>
+  <div class="code-wrap"><div class="code-label">uuid options</div><pre>prefix: string  — embedded at the start of the UUID hex
+suffix: string  — embedded at the end of the UUID hex</pre></div>
+  <div class="code-wrap"><div class="code-label">hash options</div><pre>algorithm: "md5" | "sha1" | "sha256"   (default: "sha256")</pre></div>
+  <div class="code-wrap"><div class="code-label">password options</div><pre>uppercase: true|false   (default: true)
+lowercase: true|false   (default: true)
+numbers:   true|false   (default: true)
+special:   true|false   (default: false)
+length:    integer      (default: 16, range: 4–128)</pre></div>
+  <div class="code-wrap"><div class="code-label">username options</div><pre>style:  "name_year" | "adj_noun" | "name_random" | "mrx"   (default: "name_year")
+prefix: string</pre></div>
+
+  <h3>👤 Contact & Identity</h3>
+  <div class="code-wrap"><div class="code-label">name options</div><pre>starts_with: string
+ends_with:   string</pre></div>
+  <div class="code-wrap"><div class="code-label">email options</div><pre>domain:    string
+extension: "com" | "org" | "net" | "io" | "test" | "co"</pre></div>
+  <div class="code-wrap"><div class="code-label">phone options</div><pre>country:      country code e.g. "US", "IN", "GB"   (default: "US")
+include_code: true|false   (default: true)</pre></div>
+  <div class="code-wrap"><div class="code-label">address / city / zipcode options</div><pre>country: country code e.g. "US", "DE", "JP"</pre></div>
+  <div class="code-wrap"><div class="code-label">coordinates options</div><pre>precision: integer   decimal places (default: 6, range: 1–8)</pre></div>
+
+  <h3>💳 Financial & Sensitive</h3>
+  <div class="code-wrap"><div class="code-label">credit_card options</div><pre>card_type: "Visa" | "Mastercard" | "American Express" | "Random"
+valid:     "valid" | "invalid"</pre></div>
+  <div class="code-wrap"><div class="code-label">ssn options</div><pre>country: "US" | "UK" | "Random"   (default: "US")</pre></div>
+  <div class="code-wrap"><div class="code-label">barcode options</div><pre>numeric_only: true|false   (default: true)
+length:       integer      (default: 13, range: 8–20)</pre></div>
+  <div class="code-wrap"><div class="code-label">isbn options</div><pre>format: "isbn10" | "isbn13"   (default: "isbn13")</pre></div>
+
+  <h3>🌐 Network & Web</h3>
+  <div class="code-wrap"><div class="code-label">ip options</div><pre>version: "ipv4" | "ipv6"   (default: "ipv4")</pre></div>
+  <div class="code-wrap"><div class="code-label">url options</div><pre>protocol:  "https" | "http"
+domain:    string
+extension: "com" | "net" | "org" | "io" | "test" | "co"</pre></div>
+  <div class="code-wrap"><div class="code-label">mac_address options</div><pre>uppercase: true|false   (default: true)
+separator: ":" | "-"    (default: ":")</pre></div>
+  <div class="code-wrap"><div class="code-label">imei options</div><pre>brand:          "Apple" | "Samsung" | "Xiaomi" | "Generic"
+valid_checksum: true|false   (default: true)</pre></div>
+
+  <h3>🕐 Time & Text</h3>
+  <div class="code-wrap"><div class="code-label">date options</div><pre>from_year: integer   (default: 2000)
+to_year:   integer   (default: 2030)
+format:    "iso" | "us" | "eu"   (default: "iso")</pre></div>
+  <div class="code-wrap"><div class="code-label">datetime options</div><pre>include_date:     true|false   (default: true)
+include_time:     true|false   (default: true)
+include_timezone: true|false   (default: false)</pre></div>
+  <div class="code-wrap"><div class="code-label">sentence options</div><pre>grammatically_valid: true|false   (default: true)</pre></div>
+  <div class="code-wrap"><div class="code-label">paragraph options</div><pre>min_sentences: integer   (default: 3)
+max_sentences: integer   (default: 6)</pre></div>
+
+  <h3>🎨 Colors</h3>
+  <div class="code-wrap"><div class="code-label">hex_color options</div><pre>uppercase: true|false   (default: true)</pre></div>
+  <div class="code-wrap"><div class="code-label">rgb_color options</div><pre>min_value: integer   (default: 0,   range: 0–255)
+max_value: integer   (default: 255, range: 0–255)</pre></div>
+
+  <h3>🏢 Work & Organization</h3>
+  <div class="code-wrap"><div class="code-label">company options</div><pre>starts_with: string</pre></div>
+  <div class="code-wrap"><div class="code-label">job options</div><pre>seniority: "any" | "junior" | "senior" | "lead"   (default: "any")</pre></div>
+
+  <!-- Live tester -->
+  <h2>Live API Tester</h2>
+  <div class="note">Requires the server to be running at <strong>http://localhost:8080</strong></div>
+  <div class="tester">
+    <div class="tester-row">
+      <div>
+        <label>Type</label>
+        <select id="testType">
+          <option>uuid</option><option>hash</option><option>password</option><option>username</option>
+          <option>name</option><option>email</option><option>phone</option><option>address</option>
+          <option>country</option><option>city</option><option>zipcode</option><option>coordinates</option>
+          <option>credit_card</option><option>ssn</option><option>barcode</option><option>isbn</option>
+          <option>ip</option><option>url</option><option>mac_address</option><option>imei</option>
+          <option>date</option><option>datetime</option><option>sentence</option><option>paragraph</option>
+          <option>hex_color</option><option>rgb_color</option><option>company</option><option>job</option>
+        </select>
+      </div>
+      <div>
+        <label>Count</label>
+        <input type="number" id="testCount" value="5" min="1" max="100">
+      </div>
+      <button class="run-btn" onclick="runTest()">▶ Run</button>
+    </div>
+    <pre id="testOutput"></pre>
+  </div>
+</div>
+
+<script>
+async function runTest() {
+  const out = document.getElementById('testOutput');
+  out.style.display = 'block';
+  out.style.color = '#94a3b8';
+  out.textContent = 'Fetching…';
+  try {
+    const type  = document.getElementById('testType').value;
+    const count = document.getElementById('testCount').value;
+    const res   = await fetch(`/api/generate?type=${type}&count=${count}`);
+    const json  = await res.json();
+    if (!res.ok) throw new Error(json.error || res.statusText);
+    out.style.color = '#4ade80';
+    out.textContent = JSON.stringify(json, null, 2);
+  } catch(e) {
+    out.style.color = '#f87171';
+    out.textContent = 'Error: ' + e.message + '\n\nMake sure server.py is running on port 8080.';
+  }
+}
+</script>
+</body>
+</html>
