@@ -16,7 +16,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from api import handle_api
 
-PORT = 8080
+PORT = 8000
 HOST = "localhost"
 
 
@@ -56,18 +56,18 @@ if __name__ == "__main__":
     try:
         server = http.server.HTTPServer((HOST, PORT), AppHandler)
     except OSError:
-        print(f"\n  ✗ Port {PORT} is already in use.\n    Edit PORT in server.py to change it.\n")
+        print(f"\n  [X] Port {PORT} is already in use.\n    Edit PORT in server.py to change it.\n")
         sys.exit(1)
 
     threading.Timer(0.4, open_browser).start()
 
     print()
-    print("  ╔═══════════════════════════════════════════════╗")
-    print("  ║     Test Data Generator · QA Tools  v3        ║")
-    print("  ╚═══════════════════════════════════════════════╝")
+    print("  +================================================+")
+    print("  |     Test Data Generator - QA Tools  v3       |")
+    print("  +================================================+")
     print()
-    print(f"  ✓  App   →  http://{HOST}:{PORT}")
-    print(f"  ✓  API   →  http://{HOST}:{PORT}/api/")
+    print(f"  [OK] App   ->  http://{HOST}:{PORT}")
+    print(f"  [OK] API   ->  http://{HOST}:{PORT}/api/")
     print()
     print("     Endpoints:")
     print("       GET  /api/categories")
