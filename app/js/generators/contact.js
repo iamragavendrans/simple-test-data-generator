@@ -64,15 +64,23 @@ export function generatePhone({ country = 'US', include_code = true } = {}) {
   return include_code ? `${code} ${num}` : num;
 }
 
+// COUNTRIES uses 'GB' for the UK while the address/city/street tables use 'UK'.
+// Normalize so any selector reaches the right dataset.
+function normalizeCountry(c) {
+  if (!c) return '';
+  return c === 'GB' ? 'UK' : c;
+}
+
 export function generateAddress({ country = 'US' } = {}) {
+  const c         = normalizeCountry(country);
   const streetNum = randInt(1, 9999);
-  const streets   = STREETS_BY_COUNTRY[country] ?? STREETS_BY_COUNTRY.US;
-  const cities    = CITIES_BY_COUNTRY[country]  ?? CITIES_BY_COUNTRY.US;
+  const streets   = STREETS_BY_COUNTRY[c] ?? STREETS_BY_COUNTRY.US;
+  const cities    = CITIES_BY_COUNTRY[c]  ?? CITIES_BY_COUNTRY.US;
 
   const street = choice(streets);
   const city   = choice(cities.filter(Boolean));
 
-  switch (country) {
+  switch (c) {
     case 'US': {
       const states   = ['CA','NY','TX','FL','IL','PA','OH','GA','NC','MI'];
       return `${streetNum} ${street}, ${city}, ${choice(states)} ${randInt(10000,99999)}`;
@@ -116,15 +124,25 @@ export function generateCountry({ starts_with = '' } = {}) {
 }
 
 export function generateCity({ country = '' } = {}) {
-  const list = (country && CITIES_BY_COUNTRY[country])
-    ? CITIES_BY_COUNTRY[country].filter(Boolean)
+  const c    = normalizeCountry(country);
+  const list = (c && CITIES_BY_COUNTRY[c])
+    ? CITIES_BY_COUNTRY[c].filter(Boolean)
     : CITIES_ALL.filter(Boolean);
   return choice(list);
 }
 
-export function generateZipcode({ zip_from = 10000, zip_to = 99999 } = {}) {
-  let lo = parseInt(zip_from, 10) || 10000;
-  let hi = parseInt(zip_to,   10) || 99999;
+export function generateZipcode({ country = 'US', from = 10000, to = 99999 } = {}) {
+  const c = normalizeCountry(country);
+  if (c === 'UK') {
+    const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    return `${choice([...A])}${choice([...A])}${randInt(1,9)} ${randInt(1,9)}${choice([...A])}${choice([...A])}`;
+  }
+  if (c === 'CA') {
+    const A = 'ABCDEFGHJKLMNPRSTVWXYZ';
+    return `${choice([...A])}${randInt(0,9)}${choice([...A])} ${randInt(0,9)}${choice([...A])}${randInt(0,9)}`;
+  }
+  let lo = parseInt(from, 10) || 10000;
+  let hi = parseInt(to,   10) || 99999;
   if (lo > hi) [lo, hi] = [hi, lo];
-  return String(randInt(lo, hi));
+  return String(randInt(lo, hi)).padStart(5, '0');
 }

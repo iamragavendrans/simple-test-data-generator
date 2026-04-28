@@ -253,7 +253,18 @@
 
     @media (max-width:1100px){ .subtypes-panel{width:195px} .config-panel{width:275px} }
     @media (max-width:820px) { .subtypes-panel{width:165px} .config-panel{width:240px} }
-    @media (max-width:680px) { .app-window{width:100vw;height:100vh;border-radius:0} .shortcut-hint,.badge{display:none} }
+    @media (max-width: 720px) {
+      html, body { height: auto; overflow: auto; }
+      body { display: block; }
+      .app-window { width: 100%; height: auto; min-height: 100vh; border-radius: 0; border: none; box-shadow: none; }
+      .title-bar { padding: 10px 14px; flex-wrap: wrap; gap: 10px; }
+      .title-bar h1 { font-size: 13px; gap: 6px; }
+      .shortcut-hint { display: none; }
+      .content { padding: 40px 20px; }
+      .icon { font-size: 64px; }
+      .title { font-size: 22px; }
+      .description { font-size: 14px; max-width: 100%; }
+    }
   </style>
 </head>
 <body>
