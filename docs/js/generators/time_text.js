@@ -20,12 +20,13 @@ export function generateDatetime({
   const dateStr = `${pad(year,4)}-${pad(month)}-${pad(day)}`;
   const timeStr = `${pad(hour)}:${pad(min)}:${pad(sec)}.${pad(ms,3)}`;
 
-  let result = '';
+  let result;
   if (include_date && include_time) result = `${dateStr}T${timeStr}`;
   else if (include_date)            result = dateStr;
   else if (include_time)            result = timeStr;
+  else                              result = dateStr;
 
-  if (include_timezone && result) result += 'Z';
+  if (include_timezone) result += 'Z';
   return result;
 }
 
