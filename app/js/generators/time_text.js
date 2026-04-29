@@ -11,7 +11,7 @@ export function generateDatetime({
 } = {}) {
   const year  = randInt(2020, 2025);
   const month = randInt(1, 12);
-  const day   = randInt(1, 28);
+  const day   = randInt(1, new Date(year, month, 0).getDate());
   const hour  = randInt(0, 23);
   const min   = randInt(0, 59);
   const sec   = randInt(0, 59);
