@@ -153,8 +153,17 @@ export function renderConfig(config, onGenerate) {
     updateConfig(typeId, 'suffix', e.target.value); onGenerate();
   });
 
-  // Generate button
-  document.getElementById('genBtn')?.addEventListener('click', onGenerate);
+  // Generate button — on mobile, also scroll the results into view so the
+  // user sees the output without manually scrolling past the config panel.
+  document.getElementById('genBtn')?.addEventListener('click', () => {
+    onGenerate();
+    if (window.matchMedia?.('(max-width: 720px)').matches) {
+      requestAnimationFrame(() => {
+        document.querySelector('.results-panel')
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  });
 
   // Checkboxes
   checkboxOpts.forEach(opt => {
