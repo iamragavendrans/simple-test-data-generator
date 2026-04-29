@@ -28,14 +28,15 @@ export function renderResults(message) {
   }
 
   container.innerHTML = results.map((v, i) => {
-    const isHex = v.startsWith('#');
-    const isRgb = v.startsWith('rgb(');
+    const s = String(v);
+    const isHex = s.startsWith('#');
+    const isRgb = s.startsWith('rgb(');
     const isColor = isHex || isRgb;
-    const safe = v.replace(/'/g, "\\'");
-    return `<div class="result-item" data-value="${encodeURIComponent(v)}" role="button" tabindex="0" aria-label="Copy value ${i + 1}">
+    const swatch = isColor ? escapeAttr(s) : '';
+    return `<div class="result-item" data-value="${encodeURIComponent(s)}" role="button" tabindex="0" aria-label="Copy value ${i + 1}">
       <span class="result-num">#${i + 1}</span>
-      ${isColor ? `<div class="color-swatch" style="background:${v}" aria-hidden="true"></div>` : ''}
-      <span class="result-value">${v}</span>
+      ${isColor ? `<div class="color-swatch" style="background:${swatch}" aria-hidden="true"></div>` : ''}
+      <span class="result-value">${escapeHtml(s)}</span>
       <span class="copy-hint">⎘ Copy</span>
     </div>`;
   }).join('');
@@ -90,6 +91,17 @@ export function downloadCSV() {
 }
 
 // ── internal helpers ──────────────────────────────────────────────────────────
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+function escapeAttr(s) {
+  // For inline style values — strip anything that could break out of the attribute
+  return s.replace(/["'<>;]/g, '');
+}
 
 function copyToClipboard(text, successMsg = '⎘ Copied!') {
   navigator.clipboard.writeText(text)

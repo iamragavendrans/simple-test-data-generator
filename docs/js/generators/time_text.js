@@ -11,7 +11,7 @@ export function generateDatetime({
 } = {}) {
   const year  = randInt(2020, 2025);
   const month = randInt(1, 12);
-  const day   = randInt(1, 28);
+  const day   = randInt(1, new Date(year, month, 0).getDate());
   const hour  = randInt(0, 23);
   const min   = randInt(0, 59);
   const sec   = randInt(0, 59);
@@ -20,12 +20,13 @@ export function generateDatetime({
   const dateStr = `${pad(year,4)}-${pad(month)}-${pad(day)}`;
   const timeStr = `${pad(hour)}:${pad(min)}:${pad(sec)}.${pad(ms,3)}`;
 
-  let result = '';
+  let result;
   if (include_date && include_time) result = `${dateStr}T${timeStr}`;
   else if (include_date)            result = dateStr;
   else if (include_time)            result = timeStr;
+  else                              result = dateStr;
 
-  if (include_timezone && result) result += 'Z';
+  if (include_timezone) result += 'Z';
   return result;
 }
 

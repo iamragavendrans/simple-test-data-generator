@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>API Docs · Test Data Generator</title>
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -71,6 +72,29 @@
     .run-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px var(--glow)}
     #testOutput{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:'Consolas','Courier New',monospace;font-size:12px;color:#4ade80;min-height:80px;white-space:pre-wrap;word-break:break-all;display:none}
     #testError{color:#f87171;display:none}
+
+    /* Mobile */
+    @media (max-width: 720px) {
+      .page { padding: 24px 16px 60px; }
+      h1 { font-size: 22px; }
+      .subtitle { font-size: 14px; margin-bottom: 28px; }
+      h2 { font-size: 15px; margin: 28px 0 12px; }
+      .ep-header { padding: 12px 14px; gap: 10px; flex-wrap: wrap; }
+      .path { font-size: 12.5px; word-break: break-all; }
+      .code-wrap { margin: 10px; }
+      pre { padding: 12px; font-size: 12px; }
+      .type-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+      .schema-row { flex-wrap: wrap; gap: 4px 12px; }
+      .schema-key { width: auto; }
+      .schema-type { width: auto; }
+      .tester { padding: 16px; }
+      .tester-row { gap: 8px; }
+      .tester input, .tester select, .tester input[type=number] {
+        width: 100%; min-width: 0; font-size: 16px;
+      }
+      .tester-row > div { flex: 1 1 100%; }
+      .run-btn { width: 100%; padding: 12px; font-size: 14px; }
+    }
   </style>
 </head>
 <body>
