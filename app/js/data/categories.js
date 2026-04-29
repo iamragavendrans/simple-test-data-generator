@@ -218,7 +218,11 @@ export const DATA_TYPES = [
     supports_prefix_suffix: false,
     options: [
       { key: 'brand',          label: 'Manufacturer',       type: 'select',
-        values: [['Apple','Apple'],['Samsung','Samsung'],['Xiaomi','Xiaomi'],['Generic','Generic']], default: 'Generic' },
+        values: [
+          ['Generic','Generic'],['Apple','Apple'],['Samsung','Samsung'],['Google','Google'],
+          ['Huawei','Huawei'],['Xiaomi','Xiaomi'],['OnePlus','OnePlus'],['Sony','Sony'],
+          ['LG','LG'],['Motorola','Motorola'],['Nokia','Nokia'],
+        ], default: 'Generic' },
       { key: 'valid_checksum', label: 'Valid Luhn checksum', type: 'checkbox', default: true },
     ],
   },

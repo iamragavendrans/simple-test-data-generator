@@ -38,7 +38,9 @@ export function generateCoordinates({ precision = 6 } = {}) {
 export function generateDate({ from_year = 2000, to_year = 2030, format = 'iso' } = {}) {
   const y = randInt(parseInt(from_year, 10) || 2000, parseInt(to_year, 10) || 2030);
   const m = randInt(1, 12);
-  const d = randInt(1, 28);
+  // Day 0 of (month+1) is the last day of `month` — handles leap years and 30/31-day months.
+  const lastDay = new Date(y, m, 0).getDate();
+  const d = randInt(1, lastDay);
   if (format === 'us') return `${pad(m)}/${pad(d)}/${y}`;
   if (format === 'eu') return `${pad(d)}/${pad(m)}/${y}`;
   return `${y}-${pad(m)}-${pad(d)}`;
