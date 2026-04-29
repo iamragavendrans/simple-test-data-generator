@@ -11,6 +11,7 @@ All generators match the JS implementations 1-for-1.
 CORS is open so any client can call this from any origin.
 """
 
+import calendar
 import json
 import random
 import string
@@ -130,8 +131,12 @@ def gen_phone(opts):
     number       = f"{ri(200,999)}-{ri(100,999)}-{ri(1000,9999)}"
     return f"{code} {number}" if include_code else number
 
+def _norm_country(c):
+    # COUNTRIES uses 'GB', street/city tables use 'UK' — normalize so lookups match.
+    return "UK" if c == "GB" else c
+
 def gen_address(opts):
-    country = opts.get("country", "US")
+    country = _norm_country(opts.get("country", "US"))
     streets = STREETS_BY_COUNTRY.get(country, STREETS_BY_COUNTRY["US"])
     cities  = CITIES_BY_COUNTRY.get(country, CITIES_ALL)
     number  = ri(1, 9999)
@@ -146,13 +151,13 @@ def gen_country(opts):
     return ch(names)
 
 def gen_city(opts):
-    country = opts.get("country") or None
+    country = _norm_country(opts.get("country") or "")
     if country and country in CITIES_BY_COUNTRY:
         return ch(CITIES_BY_COUNTRY[country])
     return ch(CITIES_ALL)
 
 def gen_zipcode(opts):
-    country = opts.get("country", "US")
+    country = _norm_country(opts.get("country", "US"))
     lo = int(opts.get("from", 10000))
     hi = int(opts.get("to",   99999))
     n  = ri(lo, hi)
@@ -255,7 +260,8 @@ def gen_date(opts):
     from_year = int(opts.get("from_year", 2000))
     to_year   = int(opts.get("to_year",   2030))
     fmt       = opts.get("format", "iso")
-    y, m, d   = ri(from_year, to_year), ri(1,12), ri(1,28)
+    y, m = ri(from_year, to_year), ri(1, 12)
+    d = ri(1, calendar.monthrange(y, m)[1])
     if fmt == "us": return f"{m:02d}/{d:02d}/{y}"
     if fmt == "eu": return f"{d:02d}/{m:02d}/{y}"
     return f"{y}-{m:02d}-{d:02d}"
@@ -264,7 +270,8 @@ def gen_datetime(opts):
     inc_date = str(opts.get("include_date", True)).lower()  not in ("false","0")
     inc_time = str(opts.get("include_time", True)).lower()  not in ("false","0")
     inc_tz   = str(opts.get("include_timezone", False)).lower() not in ("false","0")
-    y, mo, d = ri(2020,2025), ri(1,12), ri(1,28)
+    y, mo = ri(2020, 2025), ri(1, 12)
+    d = ri(1, calendar.monthrange(y, mo)[1])
     h, mi, s = ri(0,23), ri(0,59), ri(0,59)
     ms       = ri(0,999)
     date_s   = f"{y}-{mo:02d}-{d:02d}"
