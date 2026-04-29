@@ -208,6 +208,13 @@
     /* ── Three-column body ─────────────────────────────────────────────────── */
     .main-content { display: flex; flex: 1; overflow: hidden; min-height: 0; }
 
+    /* DOM order is subtypes → config → results (so mobile reads
+       pick → configure → results naturally). On desktop we reorder
+       with flex `order` so config sits on the right and results in the middle. */
+    .subtypes-panel { order: 0; }
+    .results-panel  { order: 1; }
+    .config-panel   { order: 2; }
+
     /* ── LEFT: type list ───────────────────────────────────────────────────── */
     .subtypes-panel {
       width: 220px; flex-shrink: 0;
@@ -456,17 +463,25 @@
         background: var(--bg-raised);
         box-shadow: 0 2px 6px rgba(0,0,0,.18);
       }
-      .tab-btn { min-width: 110px; padding: 11px 8px; font-size: 10px; }
+      /* Tabs: let each fit its label and scroll horizontally — `flex: 1`
+         shrinks tabs below their text width, causing labels to overlap. */
+      .tab-btn {
+        flex: 0 0 auto; min-width: 0;
+        padding: 11px 14px; font-size: 10px;
+      }
 
-      /* Vertical stack — order is set per panel */
+      /* Vertical stack — DOM order is already subtypes → config → results,
+         so on mobile we just unset desktop's `order` overrides. */
       .main-content {
         display: flex; flex-direction: column;
         flex: 0 0 auto; overflow: visible; min-height: 0;
       }
+      .subtypes-panel,
+      .config-panel,
+      .results-panel { order: 0; }
 
       /* ── 1. Type picker (pill row under tabs) ─────────────────────────── */
       .subtypes-panel {
-        order: 1;
         width: 100%; flex-shrink: 0; flex-direction: column;
         border-right: none; border-bottom: 1px solid var(--border);
         overflow: visible;
@@ -506,7 +521,6 @@
 
       /* ── 2. Configure section (in flow, before results) ───────────────── */
       .config-panel {
-        order: 2;
         width: 100%; border-left: none;
         border-top: none; border-bottom: 1px solid var(--border);
         overflow: visible;
@@ -527,7 +541,6 @@
 
       /* ── 3. Results (always last, where the eye lands after generate) ─── */
       .results-panel {
-        order: 3;
         width: 100%; min-height: 50vh;
       }
       .results-header {
@@ -567,7 +580,7 @@
 
     @media (max-width: 380px) {
       .badge { display: none; }
-      .tab-btn { min-width: 96px; padding: 10px 6px; }
+      .tab-btn { padding: 10px 12px; }
       .subtype-btn { padding: 7px 11px; font-size: 11.5px; }
     }
   </style>
@@ -600,6 +613,17 @@
       <!-- LEFT: grouped type list -->
       <div class="subtypes-panel" id="subtypes" role="listbox" aria-label="Data types"></div>
 
+      <!-- RIGHT: config + single Generate button (placed before results in DOM
+           so mobile gets pick → configure → results without needing flex `order`;
+           on desktop CSS pushes it to the rightmost column). -->
+      <div class="config-panel" id="configPanel">
+        <div class="empty-state">
+          <div class="empty-icon">⚙️</div>
+          <div class="empty-title">Configuration</div>
+          <div class="empty-desc">Select a data type to configure</div>
+        </div>
+      </div>
+
       <!-- MIDDLE: results -->
       <div class="results-panel">
         <div class="results-header">
@@ -619,15 +643,6 @@
             <div class="empty-title">Ready to Generate</div>
             <div class="empty-desc">Pick a type from the left panel,<br>configure on the right, then hit Generate.</div>
           </div>
-        </div>
-      </div>
-
-      <!-- RIGHT: config + single Generate button -->
-      <div class="config-panel" id="configPanel">
-        <div class="empty-state">
-          <div class="empty-icon">⚙️</div>
-          <div class="empty-title">Configuration</div>
-          <div class="empty-desc">Select a data type to configure</div>
         </div>
       </div>
 
