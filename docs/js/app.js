@@ -27,11 +27,39 @@ function init() {
 
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runGenerate(); }
+    if (e.key === 'Escape') closeDrawer();
   });
+
+  // Mobile drawer
+  document.getElementById('hamburgerBtn')?.addEventListener('click', openDrawer);
+  document.getElementById('drawerClose')?.addEventListener('click', closeDrawer);
+  document.getElementById('drawerBackdrop')?.addEventListener('click', closeDrawer);
+
+  // Floating Generate button (mobile)
+  document.getElementById('fabGenerate')?.addEventListener('click', runGenerate);
 
   const lastType = _loadLastType();
   if (lastType) _restoreType(lastType, categories);
   else if (categories.length) selectCategory(categories[0].id);
+}
+
+function openDrawer() {
+  const drawer = document.getElementById('drawer');
+  const backdrop = document.getElementById('drawerBackdrop');
+  if (!drawer) return;
+  drawer.classList.add('open');
+  drawer.setAttribute('aria-hidden', 'false');
+  backdrop?.classList.add('show');
+  backdrop?.removeAttribute('hidden');
+}
+
+function closeDrawer() {
+  const drawer = document.getElementById('drawer');
+  const backdrop = document.getElementById('drawerBackdrop');
+  if (!drawer) return;
+  drawer.classList.remove('open');
+  drawer.setAttribute('aria-hidden', 'true');
+  backdrop?.classList.remove('show');
 }
 
 function selectCategory(catId) {
@@ -42,6 +70,7 @@ function selectCategory(catId) {
   if (!cat) return;
   renderSubtypes(cat, selectType);
   if (cat.types.length) selectType(cat.types[0].type);
+  closeDrawer();
 }
 
 function selectType(typeId) {
@@ -49,10 +78,12 @@ function selectType(typeId) {
   if (!config) return;
   setState({ selectedType: typeId });
   setActiveSubtype(typeId);
+  // Schema-only 50/50 layout (and hide the single-item subtype panel)
+  document.querySelector('.app-window')?.classList.toggle('schema-mode', typeId === 'json_schema');
   const { typeConfigs, configs } = getState();
   setState({ typeConfigs: { ...typeConfigs, [typeId]: config } });
   if (!configs[typeId]) {
-    const defaults = { count: 10 };
+    const defaults = { count: config.defaultCount ?? 10 };
     (config.options ?? []).forEach(opt => {
       if (opt.default !== undefined && opt.default !== null) defaults[opt.key] = opt.default;
     });
@@ -67,13 +98,19 @@ function runGenerate() {
   const { selectedType, configs } = getState();
   if (!selectedType) return;
   const btn = document.getElementById('genBtn');
+  const fab = document.getElementById('fabGenerate');
+  const fabIcon = document.getElementById('fabIcon');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="btn-icon">⏳</span> Generating…'; }
+  if (fab) fab.disabled = true;
+  if (fabIcon) fabIcon.textContent = '⏳';
   requestAnimationFrame(() => {
     const opts = { ...(configs[selectedType] ?? {}), count: configs[selectedType]?.count ?? 10 };
     const { data, message } = generate(selectedType, opts);
     setState({ results: data });
     renderResults(message);
     if (btn) { btn.disabled = false; btn.innerHTML = '<span class="btn-icon">⚡</span> Generate'; }
+    if (fab) fab.disabled = false;
+    if (fabIcon) fabIcon.textContent = '⚡';
   });
 }
 

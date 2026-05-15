@@ -430,6 +430,22 @@
     ::-webkit-scrollbar-thumb { background: rgba(128,128,128,.2); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(128,128,128,.35); }
 
+    /* ── Schema mode (json_schema): 50/50 input ↔ output, no subtype panel ── */
+    .schema-mode .subtypes-panel { display: none; }
+    @media (min-width: 721px) {
+      .schema-mode .main-content { gap: 0; }
+      .schema-mode .config-panel {
+        order: -1; width: 50%; flex: 0 0 50%;
+        border-left: none; border-right: 1px solid var(--border);
+      }
+      .schema-mode .results-panel { flex: 1 1 50%; min-width: 0; }
+      .schema-mode .config-textarea { min-height: 320px; }
+      .schema-mode .result-value-multi { max-height: 60vh; }
+    }
+
+    /* ── Mobile-only nav: hamburger, drawer, FAB (hidden on desktop) ── */
+    .hamburger-btn, .drawer, .drawer-backdrop, .fab-generate { display: none; }
+
     /* Safe-area-inset support for notched / rounded-screen devices */
     @supports (padding: max(0px)) {
       .app-window  { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
@@ -454,14 +470,93 @@
         border-radius: 0; border: none; box-shadow: none;
       }
 
-      .title-bar { padding: 10px 14px; flex-wrap: wrap; gap: 10px; }
+      .title-bar {
+        position: sticky; top: 0; z-index: 11;
+        padding: 10px 14px; gap: 10px; background: var(--bg-raised);
+      }
       .title-bar h1 { font-size: 13px; gap: 6px; }
       .logo { font-size: 17px; }
       .shortcut-hint { display: none; }
       .badge { font-size: 8.5px; padding: 2px 7px; }
 
-      .top-tabs { position: sticky; top: 0; z-index: 10; scroll-snap-type: x mandatory; }
-      .tab-btn  { min-width: 110px; padding: 12px 10px; font-size: 10px; min-height: 44px; scroll-snap-align: start; }
+      /* Hide the horizontal tabs; nav moves into the hamburger drawer */
+      .top-tabs { display: none; }
+
+      .hamburger-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 38px; height: 38px; flex-shrink: 0;
+        background: var(--bg-surface); border: 1px solid var(--border);
+        border-radius: 10px; color: var(--text);
+        font-size: 18px; cursor: pointer; transition: background .15s, border-color .15s;
+      }
+      .hamburger-btn:hover { background: var(--bg-hover); border-color: var(--border-hi); }
+      .hamburger-btn:active { transform: scale(.94); }
+      .title-bar .title-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+      .title-bar h1 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+      .drawer-backdrop {
+        display: block; position: fixed; inset: 0; z-index: 99;
+        background: rgba(0,0,0,.55); opacity: 0; pointer-events: none;
+        transition: opacity .22s ease;
+      }
+      .drawer-backdrop.show { opacity: 1; pointer-events: auto; }
+
+      .drawer {
+        display: flex; flex-direction: column;
+        position: fixed; top: 0; left: 0; bottom: 0;
+        width: 82vw; max-width: 320px; z-index: 100;
+        background: var(--bg-raised); border-right: 1px solid var(--border);
+        transform: translateX(-105%); transition: transform .25s ease;
+        padding-top: env(safe-area-inset-top, 0);
+        box-shadow: 4px 0 24px rgba(0,0,0,.45);
+      }
+      .drawer.open { transform: translateX(0); }
+      .drawer-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 16px 18px; border-bottom: 1px solid var(--border);
+        font-size: 13px; font-weight: 700; color: var(--text);
+        letter-spacing: .5px; text-transform: uppercase;
+      }
+      .drawer-close {
+        background: transparent; border: none; color: var(--text-muted);
+        font-size: 18px; cursor: pointer; padding: 6px 10px; border-radius: 6px;
+      }
+      .drawer-close:hover { background: var(--bg-hover); color: var(--text); }
+      .drawer-list { flex: 1; padding: 10px; overflow-y: auto; }
+      .drawer-item {
+        display: flex; align-items: center; gap: 12px;
+        padding: 13px 12px; margin-bottom: 4px; border-radius: 10px;
+        cursor: pointer; color: var(--text-sub); font-size: 14px; font-weight: 600;
+        min-height: 48px; border: 1px solid transparent;
+        transition: background .15s, color .15s, border-color .15s;
+      }
+      .drawer-item:hover { background: var(--bg-hover); color: var(--text); border-color: var(--border); }
+      .drawer-item.active {
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #fff; border-color: transparent;
+        box-shadow: 0 3px 12px var(--accent-glow);
+      }
+      .drawer-icon { font-size: 19px; flex-shrink: 0; }
+
+      /* Floating Generate button — replaces the inline config-footer one */
+      .fab-generate {
+        display: inline-flex; align-items: center; justify-content: center;
+        position: fixed; right: 18px;
+        bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+        width: 60px; height: 60px; border: none; border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #fff; cursor: pointer; z-index: 50;
+        box-shadow: 0 6px 18px rgba(0,0,0,.45), 0 0 0 1px var(--accent-glow);
+        transition: transform .15s, box-shadow .2s, opacity .2s;
+      }
+      .fab-generate:hover  { transform: scale(1.05); box-shadow: 0 10px 28px rgba(0,0,0,.5); }
+      .fab-generate:active { transform: scale(.92); }
+      .fab-generate:disabled { opacity: .55; cursor: not-allowed; }
+      .fab-icon { font-size: 24px; line-height: 1; }
+      .config-footer { display: none; }
+
+      /* Leave clearance below the last config field so the FAB never covers it */
+      .main-content { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
 
       .main-content { flex-direction: column; flex: 0 0 auto; overflow: visible; min-height: 0; }
 
@@ -543,9 +638,20 @@
 <body>
   <div class="app-window">
 
+    <!-- Mobile slide-in category drawer (hidden ≥721px) -->
+    <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+    <aside class="drawer" id="drawer" aria-hidden="true" aria-label="Categories">
+      <div class="drawer-header">
+        <span class="drawer-title">Categories</span>
+        <button class="drawer-close" id="drawerClose" type="button" aria-label="Close menu">✕</button>
+      </div>
+      <nav class="drawer-list" id="drawerList" role="tablist"></nav>
+    </aside>
+
     <!-- Title bar -->
     <div class="title-bar">
       <div class="title-left">
+        <button class="hamburger-btn" id="hamburgerBtn" type="button" aria-label="Open categories" aria-controls="drawer">☰</button>
         <h1>
           <span class="logo">🎲</span>
           Test Data Generator
@@ -601,6 +707,11 @@
 
     </div>
   </div>
+
+  <!-- Floating Generate FAB (mobile only) -->
+  <button class="fab-generate" id="fabGenerate" type="button" aria-label="Generate">
+    <span class="fab-icon" id="fabIcon">⚡</span>
+  </button>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script type="module" src="js/app.js"></script>
