@@ -30,7 +30,7 @@ export function renderConfig(config, onGenerate) {
   // Count with stepper
   const currentCount = cfg.count ?? 10;
   scroll += `
-    <div class="config-section">
+    <div class="config-section config-section-count">
       <label class="config-label" for="cfgCount">Count</label>
       <div class="count-row">
         <button class="count-btn" id="countMinus" type="button" aria-label="Decrease">−</button>
@@ -59,7 +59,7 @@ export function renderConfig(config, onGenerate) {
 
   // Checkboxes
   if (checkboxOpts.length) {
-    scroll += '<div class="config-section">';
+    scroll += '<div class="config-section config-section-checkboxes">';
     checkboxOpts.forEach(opt => {
       const checked = cfg[opt.key] !== undefined ? cfg[opt.key] : opt.default;
       scroll += `

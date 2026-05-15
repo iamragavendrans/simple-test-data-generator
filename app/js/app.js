@@ -7,7 +7,7 @@
 import { getState, setState } from './store.js';
 import { buildCategoryList, getTypeConfig } from './data/categories.js';
 import { generate } from './generators/index.js';
-import { renderTabs, setActiveTab }         from './ui/tabs.js';
+import { renderTabs, setActiveTab, setActiveDrawerType } from './ui/tabs.js';
 import { renderSubtypes, setActiveSubtype } from './ui/subtypes.js';
 import { renderConfig }                     from './ui/config.js';
 import { renderResults, copyRaw, copyJSON, copyCSV } from './ui/results.js';
@@ -19,7 +19,7 @@ function init() {
   initTheme();
   const categories = buildCategoryList();
   setState({ categories });
-  renderTabs(selectCategory);
+  renderTabs(selectCategory, selectTypeFromDrawer);
 
   document.getElementById('btnCopyRaw')?.addEventListener('click', copyRaw);
   document.getElementById('btnCopyJSON')?.addEventListener('click', copyJSON);
@@ -78,7 +78,8 @@ function selectType(typeId) {
   if (!config) return;
   setState({ selectedType: typeId });
   setActiveSubtype(typeId);
-  // Schema-only 50/50 layout (and hide the single-item subtype panel)
+  setActiveDrawerType(typeId);
+  // Schema-only minimal layout (hide subtypes, title, count, pretty-print)
   document.querySelector('.app-window')?.classList.toggle('schema-mode', typeId === 'json_schema');
   const { typeConfigs, configs } = getState();
   setState({ typeConfigs: { ...typeConfigs, [typeId]: config } });
@@ -92,6 +93,18 @@ function selectType(typeId) {
   renderConfig(config, runGenerate);
   runGenerate();
   _saveLastType(typeId);
+}
+
+// Drawer leaf click — jump to that type, switching category first if needed.
+function selectTypeFromDrawer(typeId) {
+  const { categories } = getState();
+  const cat = categories.find(c => c.types.some(t => t.type === typeId));
+  if (!cat) return;
+  setState({ selectedCategory: cat.id });
+  setActiveTab(cat.id);
+  renderSubtypes(cat, selectType);
+  selectType(typeId);
+  closeDrawer();
 }
 
 function runGenerate() {

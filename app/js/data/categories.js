@@ -311,7 +311,6 @@ export const DATA_TYPES = [
     type: 'json_schema', name: 'JSON Schema → Payload', icon: '📋',
     category: 'schema', group: 'Payloads',
     supports_prefix_suffix: false,
-    defaultCount: 3,
     options: [
       { key: 'schema', label: 'Schema or JSON example', type: 'textarea',
         placeholder: 'Paste a JSON Schema (draft-07) or a JSON example…',
