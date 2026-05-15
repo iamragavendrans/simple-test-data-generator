@@ -114,6 +114,21 @@ const KEY_RULES = [
   // Networking
   { re: /^ip(v4|v6)?$|ip[_-]?address/i,                                          fn: () => generateIp() },
 
+  // API metadata fields
+  { re: /^(status|state)$|order_?status|payment_?status|workflow_?state/i,       fn: () => choice(['PENDING','ACTIVE','SUCCESS','FAILED','CANCELLED']) },
+  { re: /^(http_?)?status_?code$|response_?code/i,                               fn: () => choice([200, 201, 204, 400, 401, 403, 404, 422, 500]) },
+  { re: /environment|^env$|deploy_?env/i,                                        fn: () => choice(['production','staging','development','test']) },
+  { re: /^(query|search|q|search_?term|search_?query)$/i,                        fn: () => fillLorem(3, 20) },
+  { re: /file_?name|^filename$/i,                                                fn: () => `${choice(TEXT_WORDS)}-${randInt(100, 999)}.${choice(['pdf','png','jpg','txt','csv','json','docx','zip'])}` },
+  { re: /mime_?type|content_?type|^media_?type$/i,                               fn: () => choice(['application/json','application/xml','text/plain','text/html','image/png','image/jpeg','application/pdf','application/octet-stream']) },
+  { re: /currency(_code)?|^iso_?currency$/i,                                     fn: () => choice(['USD','EUR','GBP','JPY','INR','CAD','AUD','CHF','CNY','BRL']) },
+  { re: /locale|language(_code)?|^lang$/i,                                       fn: () => choice(['en-US','en-GB','fr-FR','de-DE','es-ES','pt-BR','ja-JP','zh-CN','hi-IN','ar-SA']) },
+  { re: /timezone|tz(_name)?$/i,                                                 fn: () => choice(['UTC','America/New_York','America/Los_Angeles','Europe/London','Europe/Berlin','Asia/Tokyo','Asia/Kolkata','Australia/Sydney']) },
+  { re: /gender|^sex$/i,                                                         fn: () => choice(['male','female','other','prefer_not_to_say']) },
+  { re: /(^|_)state$/i,                                                          fn: () => choice(['CA','NY','TX','FL','IL','PA','OH','GA','NC','MI']) },
+  { re: /version$|^semver$/i,                                                    fn: () => `${randInt(0, 5)}.${randInt(0, 20)}.${randInt(0, 50)}` },
+  { re: /tags?$|labels?$|categor(y|ies)/i,                                       fn: () => choice(['featured','sale','new','popular','limited','exclusive','trending']) },
+
   // Long text — narrow, sentence-sized → single sentence; full bio → paragraph
   { re: /^(bio|biography|about)$|description_long/i,                             fn: () => generateParagraph({ min_sentences: 2, max_sentences: 4 }) },
   { re: /description|summary|comment|note|message|body|content|caption|tagline|headline|excerpt/i,
@@ -139,6 +154,14 @@ function keyHeuristic(key) {
   return null;
 }
 
+// Categorical numeric keys — return one literal from a fixed set (HTTP codes, etc.)
+function numberCategorical(key) {
+  if (!key) return null;
+  const k = key.toLowerCase();
+  if (/^(http_?)?status_?code$|response_?code/.test(k)) return choice([200, 201, 204, 400, 401, 403, 404, 422, 500]);
+  return null;
+}
+
 // Numeric-key heuristic — only applied when the schema says number/integer.
 // Returns {min,max,asInt,decimals} hint or null.
 function numberHeuristic(key) {
@@ -153,6 +176,17 @@ function numberHeuristic(key) {
   if (/(age|years|months|days)/.test(k))                       return { min: 0,    max: 120,   asInt: true };
   if (/(percent|percentage|^pct$|ratio)/.test(k))              return { min: 0,    max: 100,   asInt: false, decimals: 2 };
   if (/^expires_?in$|^ttl$|max_?age/.test(k))                  return { min: 60,   max: 86400, asInt: true };
+  if (/(rating|stars?)$/.test(k))                              return { min: 1,    max: 5,     asInt: false, decimals: 1 };
+  if (/(score|confidence|probability)/.test(k))                return { min: 0,    max: 1,     asInt: false, decimals: 4 };
+  if (/^gpa$/.test(k))                                         return { min: 0,    max: 4,     asInt: false, decimals: 2 };
+  if (/^page(_?(num(ber)?|no|index))?$|^pageno$/.test(k))      return { min: 1,    max: 100,   asInt: true };
+  if (/^otp$|^pin$|verification_?code|one_?time/.test(k))      return { min: 100000, max: 999999, asInt: true };
+  if (/^stock$|^inventory$|in_?stock/.test(k))                 return { min: 0,    max: 1000,  asInt: true };
+  if (/^retry|attempts?$/.test(k))                             return { min: 0,    max: 10,    asInt: true };
+  if (/duration|^elapsed/.test(k))                             return { min: 1,    max: 3600,  asInt: true };
+  if (/(voltage|volts?)$/.test(k))                             return { min: 0,    max: 240,   asInt: false, decimals: 1 };
+  if (/(temperature|temp_c|celsius)/.test(k))                  return { min: -20,  max: 50,    asInt: false, decimals: 1 };
+  if (/(humidity|^moisture$)/.test(k))                         return { min: 0,    max: 100,   asInt: false, decimals: 1 };
   return null;
 }
 
@@ -170,6 +204,10 @@ const FORMAT_MAP = {
   ipv6:            () => generateIp({ version: 'ipv6' }),
   hostname:        () => `host-${randInt(1, 9999)}.example.com`,
   'idn-hostname':  () => `host-${randInt(1, 9999)}.example.com`,
+  password:        () => generatePassword(),
+  // OpenAPI 3 "binary" = file contents; emit short base64 placeholder
+  binary:          () => btoa(`bin-${randInt(1000,9999)}-${choice(TEXT_WORDS)}`),
+  byte:            () => btoa(`bin-${randInt(1000,9999)}-${choice(TEXT_WORDS)}`),
 };
 
 // ── Lenient JSON parse ────────────────────────────────────────────────────
@@ -286,6 +324,11 @@ function buildFromSchema(node, ctx, key) {
 
   let out;
   try {
+    // User-supplied ground truth wins over generated data
+    if ('example' in node)  { out = node.example;  return out; }
+    if (Array.isArray(node.examples) && node.examples.length) { out = choice(node.examples); return out; }
+    if ('default' in node && Math.random() < 0.5) { out = node.default; return out; }
+
     if (node.$ref) {
       const target = resolveRef(node.$ref, ctx.root);
       out = target ? buildFromSchema(target, ctx, key) : null;
@@ -294,9 +337,9 @@ function buildFromSchema(node, ctx, key) {
     } else if (Array.isArray(node.enum) && node.enum.length) {
       out = choice(node.enum);
     } else if (Array.isArray(node.oneOf) && node.oneOf.length) {
-      out = buildFromSchema(node.oneOf[0], ctx, key);
+      out = buildFromSchema(choice(node.oneOf), ctx, key);
     } else if (Array.isArray(node.anyOf) && node.anyOf.length) {
-      out = buildFromSchema(node.anyOf[0], ctx, key);
+      out = buildFromSchema(choice(node.anyOf), ctx, key);
     } else if (Array.isArray(node.allOf) && node.allOf.length) {
       const merged = Object.assign({}, ...node.allOf, node);
       delete merged.allOf;
@@ -327,15 +370,31 @@ function buildFromSchema(node, ctx, key) {
 }
 
 function buildNumber(node, asInt, key) {
+  // Categorical first (HTTP status etc.) — only when caller didn't set explicit bounds
+  if (node.minimum === undefined && node.maximum === undefined) {
+    const cat = numberCategorical(key);
+    if (cat !== null) return cat;
+  }
   const hint = numberHeuristic(key);
   let min = typeof node.minimum === 'number' ? node.minimum : (hint ? hint.min : 0);
   let max = typeof node.maximum === 'number' ? node.maximum : (hint ? hint.max : 1000);
   if (typeof node.exclusiveMinimum === 'number') min = node.exclusiveMinimum + (asInt ? 1 : 0.0001);
   if (typeof node.exclusiveMaximum === 'number') max = node.exclusiveMaximum - (asInt ? 1 : 0.0001);
   if (max < min) max = min;
-  if (asInt) return randInt(Math.ceil(min), Math.floor(max));
-  const dp = hint && typeof hint.decimals === 'number' ? hint.decimals : 4;
-  return +(Math.random() * (max - min) + min).toFixed(dp);
+  let v;
+  if (asInt) v = randInt(Math.ceil(min), Math.floor(max));
+  else {
+    const dp = hint && typeof hint.decimals === 'number' ? hint.decimals : 4;
+    v = +(Math.random() * (max - min) + min).toFixed(dp);
+  }
+  // multipleOf — snap to the nearest valid multiple inside [min,max]
+  if (typeof node.multipleOf === 'number' && node.multipleOf > 0) {
+    v = Math.round(v / node.multipleOf) * node.multipleOf;
+    if (v < min) v += node.multipleOf;
+    if (v > max) v -= node.multipleOf;
+    if (!asInt) v = +v.toFixed(6);
+  }
+  return v;
 }
 
 function buildString(node, key) {
@@ -363,7 +422,26 @@ function buildArray(node, ctx, key) {
     return itemSchema.map(s => buildFromSchema(s, ctx, key));
   }
   const n = randInt(lo, hi);
-  return Array.from({ length: n }, () => buildFromSchema(itemSchema, ctx, key));
+  const arr = Array.from({ length: n }, () => buildFromSchema(itemSchema, ctx, key));
+  if (node.uniqueItems) return dedupeArray(arr, () => buildFromSchema(itemSchema, ctx, key), lo);
+  return arr;
+}
+
+function dedupeArray(arr, gen, lo) {
+  const seen = new Set();
+  const out = [];
+  for (const v of arr) {
+    const k = JSON.stringify(v);
+    if (!seen.has(k)) { seen.add(k); out.push(v); }
+  }
+  // Top up if we lost items below the minimum
+  let guard = 0;
+  while (out.length < lo && guard++ < 20) {
+    const v = gen();
+    const k = JSON.stringify(v);
+    if (!seen.has(k)) { seen.add(k); out.push(v); }
+  }
+  return out;
 }
 
 function buildObject(node, ctx) {
@@ -374,6 +452,18 @@ function buildObject(node, ctx) {
   }
   for (const r of node.required ?? []) {
     if (!(r in out)) out[r] = null;
+  }
+  // additionalProperties: {schema}  → synthesize 1-2 extra keys
+  // additionalProperties: true      → emit a couple of free-form metadata keys
+  const ap = node.additionalProperties;
+  if (ap && (typeof ap === 'object' || ap === true)) {
+    const extraSchema = typeof ap === 'object' ? ap : { type: 'string' };
+    const extras = randInt(1, 2);
+    const pool = ['meta', 'extra', 'custom', 'tag', 'info', 'attr'];
+    for (let i = 0; i < extras; i++) {
+      const name = `${choice(pool)}_${randInt(1, 99)}`;
+      if (!(name in out)) out[name] = buildFromSchema(extraSchema, ctx, name);
+    }
   }
   return out;
 }
@@ -417,15 +507,20 @@ function buildFromExample(node, ctx, key) {
       const h = keyHeuristic(key);
       out = h ? String(h()) : fillLorem(node.length, Math.max(node.length, node.length + 4));
     } else if (typeof node === 'number') {
-      const hint = numberHeuristic(key);
-      if (hint) {
-        // Hint dictates int-vs-float (so totalAmount:10.0 still produces a 2-decimal price)
-        out = hint.asInt
-          ? randInt(Math.ceil(hint.min), Math.floor(hint.max))
-          : +(Math.random() * (hint.max - hint.min) + hint.min).toFixed(hint.decimals ?? 2);
+      const cat = numberCategorical(key);
+      if (cat !== null) {
+        out = cat;
       } else {
-        const asInt = Number.isInteger(node);
-        out = asInt ? randInt(0, 10000) : +(Math.random() * 1000).toFixed(2);
+        const hint = numberHeuristic(key);
+        if (hint) {
+          // Hint dictates int-vs-float (so totalAmount:10.0 still produces a 2-decimal price)
+          out = hint.asInt
+            ? randInt(Math.ceil(hint.min), Math.floor(hint.max))
+            : +(Math.random() * (hint.max - hint.min) + hint.min).toFixed(hint.decimals ?? 2);
+        } else {
+          const asInt = Number.isInteger(node);
+          out = asInt ? randInt(0, 10000) : +(Math.random() * 1000).toFixed(2);
+        }
       }
     } else if (typeof node === 'boolean') {
       out = Math.random() < 0.5;
