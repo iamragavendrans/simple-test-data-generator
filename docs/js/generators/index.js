@@ -18,6 +18,7 @@ import { generateDatetime, generateSentence, generateParagraph } from './time_te
 import { generateHexColor, generateRgbColor }              from './colors.js';
 import { generateCompany, generateJob }                    from './work.js';
 import { generateHash, generateCoordinates, generateDate } from './extras.js';
+import { generateJsonSchema }                              from './schema.js';
 
 const GENERATORS = {
   // Identifiers & Security
@@ -55,6 +56,8 @@ const GENERATORS = {
   // Work & Organization
   company:     opts => generateCompany(opts),
   job:         opts => generateJob(opts),
+  // Schema
+  json_schema: opts => generateJsonSchema(opts),
 };
 
 export function generate(typeId, options = {}) {
@@ -62,12 +65,16 @@ export function generate(typeId, options = {}) {
   if (!fn) return { data: [], message: '❌ Unknown type: ' + typeId };
 
   const { count = 10, prefix = '', suffix = '', ...rest } = options;
-  const n = Math.max(1, Math.min(1000, parseInt(count, 10) || 10));
+  const cap = typeId === 'json_schema' ? 100 : 1000;
+  const n = Math.max(1, Math.min(cap, parseInt(count, 10) || 10));
 
-  const opts = Object.fromEntries(
-    Object.entries({ prefix, suffix, ...rest }).filter(([, v]) => v !== null && v !== undefined && v !== '')
-  );
+  // For json_schema, preserve the `schema` string even if it's the default — don't strip empty.
+  const passthrough = typeId === 'json_schema'
+    ? { prefix, suffix, ...rest }
+    : Object.fromEntries(
+        Object.entries({ prefix, suffix, ...rest }).filter(([, v]) => v !== null && v !== undefined && v !== '')
+      );
 
-  const data = Array.from({ length: n }, () => fn(opts));
+  const data = Array.from({ length: n }, () => fn(passthrough));
   return { data, message: choice(FUN_MESSAGES) };
 }

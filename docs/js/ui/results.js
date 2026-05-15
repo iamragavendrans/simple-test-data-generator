@@ -32,11 +32,15 @@ export function renderResults(message) {
     const isHex = s.startsWith('#');
     const isRgb = s.startsWith('rgb(');
     const isColor = isHex || isRgb;
+    const isMulti = s.includes('\n');
     const swatch = isColor ? escapeAttr(s) : '';
-    return `<div class="result-item" data-value="${encodeURIComponent(s)}" role="button" tabindex="0" aria-label="Copy value ${i + 1}">
+    const valueTag = isMulti
+      ? `<pre class="result-value result-value-multi">${escapeHtml(s)}</pre>`
+      : `<span class="result-value">${escapeHtml(s)}</span>`;
+    return `<div class="result-item${isMulti ? ' result-item-multi' : ''}" data-value="${encodeURIComponent(s)}" role="button" tabindex="0" aria-label="Copy value ${i + 1}">
       <span class="result-num">#${i + 1}</span>
       ${isColor ? `<div class="color-swatch" style="background:${swatch}" aria-hidden="true"></div>` : ''}
-      <span class="result-value">${escapeHtml(s)}</span>
+      ${valueTag}
       <span class="copy-hint">⎘ Copy</span>
     </div>`;
   }).join('');

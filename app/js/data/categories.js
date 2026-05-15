@@ -25,6 +25,7 @@ export const CATEGORIES = [
   { id: 'time_text',   name: 'Time & Text',            icon: '🕐', order: 5 },
   { id: 'colors',      name: 'Colors',                 icon: '🎨', order: 6 },
   { id: 'work',        name: 'Work & Organization',    icon: '🏢', order: 7 },
+  { id: 'schema',      name: 'Schema',                 icon: '📋', order: 8 },
 ];
 
 export const DATA_TYPES = [
@@ -302,6 +303,19 @@ export const DATA_TYPES = [
     options: [
       { key: 'seniority', label: 'Seniority', type: 'select',
         values: [['any','Any level'],['junior','Junior'],['senior','Senior'],['lead','Lead']], default: 'any' },
+    ],
+  },
+
+  // ── 📋 Schema ────────────────────────────────────────────────────────────
+  {
+    type: 'json_schema', name: 'JSON Schema → Payload', icon: '📋',
+    category: 'schema', group: 'Payloads',
+    supports_prefix_suffix: false,
+    options: [
+      { key: 'schema', label: 'Schema or JSON example', type: 'textarea',
+        placeholder: 'Paste a JSON Schema (draft-07) or a JSON example…',
+        default: '{\n  "type": "object",\n  "properties": {\n    "id":    { "type": "string", "format": "uuid" },\n    "email": { "type": "string", "format": "email" }\n  },\n  "required": ["id", "email"]\n}' },
+      { key: 'pretty', label: 'Pretty-print JSON', type: 'checkbox', default: true },
     ],
   },
 ];

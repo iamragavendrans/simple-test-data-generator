@@ -8,6 +8,9 @@
 
 import { getState, setState } from '../store.js';
 
+const escapeHtml = s => String(s).replace(/[&<>"']/g, c =>
+  ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
 export function renderConfig(config, onGenerate) {
   const container = document.getElementById('configPanel');
   const titleEl   = document.getElementById('resultsTitle');
@@ -102,6 +105,12 @@ export function renderConfig(config, onGenerate) {
         <input type="number" class="config-input" id="opt_${opt.key}"
           value="${val}" min="${opt.min ?? 0}" max="${opt.max ?? 1000}">`;
 
+    } else if (opt.type === 'textarea') {
+      const val = cfg[opt.key] ?? opt.default ?? '';
+      scroll += `<label class="config-label" for="opt_${opt.key}">${opt.label}</label>
+        <textarea class="config-input config-textarea" id="opt_${opt.key}"
+          placeholder="${escapeHtml(opt.placeholder ?? '')}" spellcheck="false">${escapeHtml(val)}</textarea>`;
+
     } else {
       const val = cfg[opt.key] ?? '';
       scroll += `<label class="config-label" for="opt_${opt.key}">${opt.label}</label>
@@ -179,16 +188,16 @@ export function renderConfig(config, onGenerate) {
     } else {
       const el = document.getElementById(`opt_${opt.key}`);
       if (!el) return;
-      el.addEventListener('change', () => {
-        const val = opt.type === 'number' ? (parseFloat(el.value) || 0) : el.value;
-        updateConfig(typeId, opt.key, val); onGenerate();
-      });
+      const persist = () => updateConfig(typeId, opt.key,
+        opt.type === 'number' ? (parseFloat(el.value) || 0) : el.value);
+      el.addEventListener('change', () => { persist(); onGenerate(); });
+      if (opt.type === 'textarea') el.addEventListener('input', persist);
     }
   });
 
-  // Enter anywhere in the scroll area → generate
+  // Enter anywhere in the scroll area → generate (but not inside textareas)
   container.querySelector('.config-scroll')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
+    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'TEXTAREA') {
       e.preventDefault(); onGenerate();
     }
   });
