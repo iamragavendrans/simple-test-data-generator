@@ -11,7 +11,7 @@
  */
 
 import { randInt, choice } from '../utils.js';
-import { generateUuid } from './identifiers.js';
+import { generateUuid, generatePassword, generateUsername } from './identifiers.js';
 import {
   generateName, generateEmail, generatePhone, generateAddress,
   generateCity, generateCountry, generateZipcode,
@@ -20,33 +20,139 @@ import { generateIp, generateUrl } from './network.js';
 import { generateDatetime, generateSentence, generateParagraph } from './time_text.js';
 import { generateHexColor } from './colors.js';
 import { generateCompany, generateJob } from './work.js';
-import { generateDate } from './extras.js';
+import { generateDate, generateHash } from './extras.js';
+import { FIRST_NAMES, LAST_NAMES, TEXT_WORDS } from '../data/datasets.js';
 
 const MAX_DEPTH = 12;
 
-// Key-name → generator, applied in EXAMPLE mode and as a string fallback in SCHEMA mode
+// Split a key into lowercase tokens: accessToken → ['access','token'],
+// user_first_name → ['user','first','name'], URLParam → ['url','param'].
+function tokenizeKey(key) {
+  return String(key)
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .replace(/[_\-\s]+/g, ' ')
+    .toLowerCase()
+    .split(' ')
+    .filter(Boolean);
+}
+
+// Short title-case label (1–3 words from lorem) — for productName, brandName, etc.
+function shortLabel(maxWords = 3) {
+  const n = randInt(1, maxWords);
+  return Array.from({ length: n }, () => {
+    const w = choice(TEXT_WORDS);
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  }).join(' ');
+}
+
+// Lorem string filler that never breaks mid-word
+function fillLorem(minLen, maxLen) {
+  const lo = typeof minLen === 'number' ? minLen : 0;
+  const hi = typeof maxLen === 'number' ? maxLen : Infinity;
+  const words = [];
+  let len = 0;
+  while (true) {
+    if (words.length && len >= lo) break;
+    const w = choice(TEXT_WORDS);
+    const next = len === 0 ? w.length : len + 1 + w.length;
+    if (next > hi && words.length) break;
+    words.push(w);
+    len = next;
+  }
+  return words.join(' ');
+}
+
+// slug-style: lowercase-words-with-dashes
+function slugify(n = 3) {
+  return Array.from({ length: n }, () => choice(TEXT_WORDS)).join('-').toLowerCase();
+}
+
+// Key-name → generator, applied in EXAMPLE mode and as a string fallback in SCHEMA mode.
+// Order matters: more specific rules first. Patterns are tested against both the
+// full key and the tokenized last word so productName / brand_name / accessToken
+// all match cleanly.
 const KEY_RULES = [
-  { re: /e?mail/i,                                                              fn: () => generateEmail() },
+  // Auth & secrets
+  { re: /token|jwt|bearer|secret|^auth$|api[_-]?key|access[_-]?key|client[_-]?(id|secret)|session[_-]?id|csrf|nonce/i,
+                                                                                fn: () => generateHash({ algorithm: 'sha256' }) },
+  { re: /password|passwd|pwd|passphrase/i,                                       fn: () => generatePassword() },
+  { re: /^(api|app|public|private)_?key$|signing[_-]?key/i,                      fn: () => generateHash({ algorithm: 'sha256' }) },
+
+  // Identifiers
   { re: /uuid|guid/i,                                                            fn: () => generateUuid() },
-  { re: /(^|_)id$/i,                                                             fn: () => generateUuid() },
+  { re: /(^|_|-)id$|^id$/i,                                                      fn: () => generateUuid() },
+
+  // Communication
+  { re: /e?mail/i,                                                               fn: () => generateEmail() },
   { re: /phone|mobile|cell|tel(?!l)/i,                                           fn: () => generatePhone() },
-  { re: /firstname|first_name|lastname|last_name|fullname|full_name|^name$|username/i, fn: () => generateName() },
-  { re: /url|website|homepage|link/i,                                            fn: () => generateUrl() },
-  { re: /datetime|timestamp/i,                                                   fn: () => generateDatetime() },
-  { re: /date|dob|birth/i,                                                       fn: () => generateDate() },
-  { re: /colou?r|hex/i,                                                          fn: () => generateHexColor() },
+  { re: /url|website|homepage|link|href/i,                                       fn: () => generateUrl() },
+
+  // People names — specific before generic
+  { re: /^(first|given)[_-]?name$/i,                                             fn: () => choice(FIRST_NAMES) },
+  { re: /^(last|family|sur)[_-]?name$/i,                                         fn: () => choice(LAST_NAMES) },
+  { re: /^(full[_-]?name|name)$|username|user[_-]?name|nickname|displayname|display[_-]?name/i, fn: () => generateName() },
+
+  // Places
   { re: /country/i,                                                              fn: () => generateCountry() },
   { re: /city|town/i,                                                            fn: () => generateCity() },
   { re: /address|street/i,                                                       fn: () => generateAddress() },
   { re: /zip|postal/i,                                                           fn: () => generateZipcode() },
+
+  // Time — verbs, plus any *_at / *At suffix (created_at, lastLoginAt, paidAt)
+  { re: /datetime|timestamp|(_at$|[a-z]At$)|(created|updated|deleted|modified|expires|expiry|expiration|issued|published|scheduled|started|finished|completed|last_?login)/i,
+                                                                                fn: () => generateDatetime() },
+  { re: /date|dob|birth/i,                                                       fn: () => generateDate() },
+
+  // Visuals
+  { re: /colou?r|hex/i,                                                          fn: () => generateHexColor() },
+
+  // Work
   { re: /company|organi[sz]ation|employer/i,                                     fn: () => generateCompany() },
-  { re: /job|title|position|role/i,                                              fn: () => generateJob() },
-  { re: /ip(v4|v6)?$|ipaddress/i,                                                fn: () => generateIp() },
-  { re: /description|bio|summary/i,                                              fn: () => generateParagraph() },
+  { re: /job|title|position|role|occupation/i,                                   fn: () => generateJob() },
+
+  // Networking
+  { re: /^ip(v4|v6)?$|ip[_-]?address/i,                                          fn: () => generateIp() },
+
+  // Long text — narrow, sentence-sized → single sentence; full bio → paragraph
+  { re: /^(bio|biography|about)$|description_long/i,                             fn: () => generateParagraph({ min_sentences: 2, max_sentences: 4 }) },
+  { re: /description|summary|comment|note|message|body|content|caption|tagline|headline|excerpt/i,
+                                                                                fn: () => generateSentence() },
+
+  // Slugs & handles
+  { re: /^slug$|^handle$|^path$|permalink/i,                                     fn: () => slugify(randInt(2, 4)) },
+
+  // Catch-all for product/brand/category/team/etc. → short Title-Case label
+  { re: /name$/i,                                                                fn: () => shortLabel(3) },
 ];
 
+// Test rules against the whole key first, then against the last camelCase / snake_case
+// token (catches productName → "name", access_token → "token", etc.)
 function keyHeuristic(key) {
+  if (!key) return null;
   for (const r of KEY_RULES) if (r.re.test(key)) return r.fn;
+  const tokens = tokenizeKey(key);
+  if (!tokens.length) return null;
+  const last = tokens[tokens.length - 1];
+  const tail = tokens.slice(-2).join('');           // accesstoken, productname
+  for (const r of KEY_RULES) if (r.re.test(last) || r.re.test(tail)) return r.fn;
+  return null;
+}
+
+// Numeric-key heuristic — only applied when the schema says number/integer.
+// Returns {min,max,asInt,decimals} hint or null.
+function numberHeuristic(key) {
+  if (!key) return null;
+  const k = key.toLowerCase();
+  if (/^(lat|latitude)$/.test(k))                              return { min: -90,  max: 90,  asInt: false, decimals: 6 };
+  if (/^(lng|lon|long|longitude)$/.test(k))                    return { min: -180, max: 180, asInt: false, decimals: 6 };
+  if (/(price|cost|fee|salary|revenue|balance|amount|total)/.test(k))
+                                                                return { min: 0,    max: 10000, asInt: false, decimals: 2 };
+  if (/(count|qty|quantity|^num[_-]?|_num$|^number_of)/.test(k))
+                                                                return { min: 0,    max: 100,   asInt: true };
+  if (/(age|years|months|days)/.test(k))                       return { min: 0,    max: 120,   asInt: true };
+  if (/(percent|percentage|^pct$|ratio)/.test(k))              return { min: 0,    max: 100,   asInt: false, decimals: 2 };
+  if (/^expires_?in$|^ttl$|max_?age/.test(k))                  return { min: 60,   max: 86400, asInt: true };
   return null;
 }
 
@@ -206,8 +312,8 @@ function buildFromSchema(node, ctx, key) {
       switch (type) {
         case 'null':    out = null; break;
         case 'boolean': out = Math.random() < 0.5; break;
-        case 'integer': out = buildNumber(node, true); break;
-        case 'number':  out = buildNumber(node, false); break;
+        case 'integer': out = buildNumber(node, true,  key); break;
+        case 'number':  out = buildNumber(node, false, key); break;
         case 'string':  out = buildString(node, key); break;
         case 'array':   out = buildArray(node, ctx, key); break;
         case 'object':  out = buildObject(node, ctx); break;
@@ -220,26 +326,33 @@ function buildFromSchema(node, ctx, key) {
   return out;
 }
 
-function buildNumber(node, asInt) {
-  let min = typeof node.minimum === 'number' ? node.minimum : 0;
-  let max = typeof node.maximum === 'number' ? node.maximum : 1000;
+function buildNumber(node, asInt, key) {
+  const hint = numberHeuristic(key);
+  let min = typeof node.minimum === 'number' ? node.minimum : (hint ? hint.min : 0);
+  let max = typeof node.maximum === 'number' ? node.maximum : (hint ? hint.max : 1000);
   if (typeof node.exclusiveMinimum === 'number') min = node.exclusiveMinimum + (asInt ? 1 : 0.0001);
   if (typeof node.exclusiveMaximum === 'number') max = node.exclusiveMaximum - (asInt ? 1 : 0.0001);
   if (max < min) max = min;
   if (asInt) return randInt(Math.ceil(min), Math.floor(max));
-  return +(Math.random() * (max - min) + min).toFixed(4);
+  const dp = hint && typeof hint.decimals === 'number' ? hint.decimals : 4;
+  return +(Math.random() * (max - min) + min).toFixed(dp);
 }
 
 function buildString(node, key) {
   if (node.format && FORMAT_MAP[node.format]) return String(FORMAT_MAP[node.format]());
   if (node.pattern) return patternToString(node.minLength, node.maxLength);
   const h = keyHeuristic(key);
-  if (h) return String(h());
-  const lo = typeof node.minLength === 'number' ? node.minLength : 4;
-  const hi = typeof node.maxLength === 'number' ? node.maxLength : Math.max(lo + 8, 24);
-  let s = generateSentence({ grammatically_valid: false }).replace(/[.?!]/g, '');
-  while (s.length < lo) s += ' ' + generateSentence({ grammatically_valid: false }).replace(/[.?!]/g, '');
-  return s.slice(0, Math.max(lo, Math.min(hi, s.length)));
+  if (h) {
+    const out = String(h());
+    // Respect explicit maxLength if heuristic output is too long
+    if (typeof node.maxLength === 'number' && out.length > node.maxLength) {
+      return out.slice(0, node.maxLength);
+    }
+    return out;
+  }
+  const lo = typeof node.minLength === 'number' ? node.minLength : 8;
+  const hi = typeof node.maxLength === 'number' ? node.maxLength : Math.max(lo + 16, 40);
+  return fillLorem(lo, hi);
 }
 
 function buildArray(node, ctx, key) {
@@ -302,9 +415,18 @@ function buildFromExample(node, ctx, key) {
       for (const [k, v] of Object.entries(node)) out[k] = buildFromExample(v, ctx, k);
     } else if (typeof node === 'string') {
       const h = keyHeuristic(key);
-      out = h ? String(h()) : generateSentence({ grammatically_valid: false });
+      out = h ? String(h()) : fillLorem(node.length, Math.max(node.length, node.length + 4));
     } else if (typeof node === 'number') {
-      out = Number.isInteger(node) ? randInt(0, 10000) : +(Math.random() * 1000).toFixed(2);
+      const hint = numberHeuristic(key);
+      if (hint) {
+        // Hint dictates int-vs-float (so totalAmount:10.0 still produces a 2-decimal price)
+        out = hint.asInt
+          ? randInt(Math.ceil(hint.min), Math.floor(hint.max))
+          : +(Math.random() * (hint.max - hint.min) + hint.min).toFixed(hint.decimals ?? 2);
+      } else {
+        const asInt = Number.isInteger(node);
+        out = asInt ? randInt(0, 10000) : +(Math.random() * 1000).toFixed(2);
+      }
     } else if (typeof node === 'boolean') {
       out = Math.random() < 0.5;
     } else {
