@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Python
 __pycache__/
 *.py[cod]
@@ -43,3 +44,8 @@ logs/
 *.tmp
 *.temp
 Thumbs.db
+=======
+__pycache__/
+*.py[cod]
+.DS_Store
+>>>>>>> 0c27377adca682194693f565710548b8fec67db6
