@@ -1,172 +1,84 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-[![Python Version](https://img.shields.io/badge/Python-3.7%2B-blue)](https://www.python.org/)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-green)](https://github.com/iamragavendran/simple-test-data-generator)
+![Python](https://img.shields.io/badge/Python-3.7%2B-blue)
+![Dependencies](https://img.shields.io/badge/Dependencies-zero-brightgreen)
 
-# Test Data Generator · QA Tools v3
+# Test Data Generator · QA Tools
 
-A powerful, pure-frontend test data generator with a full REST API backend. Generate realistic fake data for testing, development, and QA purposes.
+Pure-frontend test data generator with an optional REST API backend.
+**29 data types** across **8 categories**, **4 themes**, **zero external dependencies**.
 
-**28 data types · 7 categories · 4 themes · Zero external dependencies**
-
----
-
-## Table of Contents
-
-- [Features](#features)
-- [Use Cases](#use-cases)
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-- [API Documentation](#api-documentation)
-- [All 28 Data Types](#all-28-data-types)
-- [Themes](#themes)
-- [Contributing](#contributing)
-- [License](#license)
-- [Support](#support)
+Includes a **JSON Schema → Payload** generator that turns a schema (or a JSON example) into realistic mock payloads — UUIDs, emails, prices, tokens — using key-name heuristics, JSON-Schema formats, `multipleOf`, `enum`, `oneOf`, `$ref`, and more.
 
 ---
 
-## Features
+## Live Demo
 
-- 🌐 **Web Interface** - Beautiful, intuitive UI for generating test data
-- 🔌 **REST API** - Programmatic access for automation and integration
-- 🎨 **4 Themes** - Dark, Light, Purple, and Midnight themes
-- 📦 **Zero Dependencies** - Uses only Python standard library
-- 🚀 **Fast & Lightweight** - Pure vanilla JavaScript frontend
-- 🔒 **Privacy-Focused** - All data generated locally, no external calls
-
----
-
-## Use Cases
-
-### 1. Software Development & Testing
-- Generate fake user data for testing registration forms
-- Create test datasets for database seeding
-- Produce sample data for unit and integration tests
-- Mock API responses during development
-
-### 2. QA & Quality Assurance
-- Generate test data for QA automation scripts
-- Create diverse test scenarios with various data types
-- Populate staging environments with realistic data
-- Test input validation and error handling
-
-### 3. Database Seeding
-- Seed development databases with realistic data
-- Create sample records for demonstrations
-- Generate bulk data for performance testing
-
-### 4. Content Generation
-- Generate placeholder content for mockups
-- Create sample emails, addresses, and phone numbers
-- Produce Lorem Ipsum alternatives (sentences, paragraphs)
-
-### 5. Security Testing
-- Test password strength validation
-- Validate credit card number processing
-- Generate hash values for encryption testing
-- Test input sanitization and XSS prevention
-
-### 6. CI/CD Pipelines
-- Integrate with automated testing pipelines
-- Generate fresh data for each test run
-- Support containerized test environments
-
-### 7. Education & Learning
-- Teach database concepts with realistic examples
-- Demonstrate data modeling with various data types
-- Practice API integration with REST endpoints
+GitHub Pages (client-side, no backend needed):
+**https://iamragavendrans.github.io/simple-test-data-generator/**
 
 ---
 
 ## Quick Start
 
-### Windows
-
-```bash
-# Option 1: Using batch file
-start.bat
-
-# Option 2: Direct Python
-cd app
-python server.py
-```
+You only need **Python 3.7+** — there is nothing to `pip install`. Just clone and run from the repo root:
 
 ### macOS / Linux
 
 ```bash
-cd app
-python3 server.py
+./run.sh
 ```
 
-The browser will automatically open at **http://localhost:8000**
+### Windows
 
----
+```bat
+run.bat
+```
 
-## Installation
+The browser opens automatically at `http://localhost:8080`.
 
-### Prerequisites
+> The launchers find your Python (`python3` → `python` → `py`), `cd` into the right directory, forward CLI flags, and auto-bump to the next free port if 8080 is already in use. Press **Ctrl+C** to stop.
 
-- Python 3.7 or higher
-- Modern browser (Chrome 90+, Firefox 90+, Safari 15.4+, Edge 90+)
+### Run options
 
-### Steps
+```bash
+./run.sh --port 9000          # use a specific port
+./run.sh --no-browser         # don't open the browser
+PORT=9000 ./run.sh            # via environment variable
+./run.sh --host 0.0.0.0       # listen on all interfaces (LAN access)
+```
 
-1. **Clone or download the repository**
-   ```bash
-   git clone https://github.com/iamragavendran/simple-test-data-generator.git
-   cd simple-test-data-generator
-   ```
+### Manual run (if launchers are unavailable)
 
-2. **Run the application**
-   ```bash
-   # Windows
-   start.bat
-   
-   # macOS / Linux
-   cd app
-   python3 server.py
-   ```
-
-3. **Open in browser**
-   Navigate to: http://localhost:8000
-
-### Alternative: Using a Different Port
-
-If port 8000 is already in use, you can change the port in `app/server.py`:
-
-```python
-# Edit line 19 in app/server.py
-PORT = 9000  # or any available port
+```bash
+python3 app/server.py                # or `python` / `py -3`
 ```
 
 ---
 
-## API Documentation
+## Troubleshooting
 
-The server exposes a REST API at **http://localhost:8000/api/**
-
-### Base URL
-
-```
-http://localhost:8000/api/
-```
-
-### Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/categories` | List all categories and their types |
-| GET | `/api/types` | Get a flat list of all 28 type IDs |
-| GET | `/api/generate` | Generate data via query parameters |
-| POST | `/api/generate` | Generate data via JSON body |
-
-### Interactive Documentation
-
-Visit **http://localhost:8000/api-docs.html** for the interactive API documentation.
+| Symptom | Fix |
+|---|---|
+| `command not found: python` | Install Python 3.7+ from [python.org](https://www.python.org/downloads/), or use the launcher (`./run.sh` or `run.bat`) — it auto-detects `python3`/`python`/`py`. |
+| `Port 8080 is in use` | The server now auto-picks the next free port (8081, 8082, …). To force one: `./run.sh --port 9000`. |
+| Blank page when double-clicking `index.html` | Browsers block ES module imports over `file://`. Always use the launcher — it serves over HTTP. |
+| Browser didn't open | Open the URL printed in the terminal manually, or pass `--no-browser` and click yourself. |
+| Permission denied on `./run.sh` | `chmod +x run.sh` (already executable in the repo; this re-arms it). |
 
 ---
 
-### Examples
+## REST API
+
+The same server exposes a REST API at `http://localhost:8080/api/`. CORS is open.
+
+```
+GET   /api/categories                          — list all categories & types
+GET   /api/types                                — flat list of all type IDs
+GET   /api/generate?type={id}&count={n}&...    — generate via query string
+POST  /api/generate  {type, count, options}    — generate via JSON body
+```
+
+Interactive docs: **http://localhost:8080/api-docs.html**
 
 #### Generate UUIDs
 ```bash
@@ -178,49 +90,80 @@ curl "http://localhost:8000/api/generate?type=uuid&count=5"
 curl -X POST http://localhost:8000/api/generate \
   -H "Content-Type: application/json" \
   -d '{"type":"password","count":3,"options":{"length":32,"special":true}}'
-```
 
-#### Generate MAC Address with Custom Separator
-```bash
-curl "http://localhost:8000/api/generate?type=mac_address&count=5&separator=-"
-```
+# IPv6
+curl "http://localhost:8080/api/generate?type=ip&count=3&version=ipv6"
 
-#### Generate IPv6 Addresses
-```bash
-curl "http://localhost:8000/api/generate?type=ip&count=3&version=ipv6"
-```
-
-#### Generate EU-Format Dates (1990-2024)
-```bash
-curl "http://localhost:8000/api/generate?type=date&count=5&format=eu&from_year=1990&to_year=2024"
-```
-
-#### Generate Japanese Addresses
-```bash
-curl -X POST http://localhost:8000/api/generate \
+# Japanese addresses
+curl -X POST http://localhost:8080/api/generate \
   -H "Content-Type: application/json" \
   -d '{"type":"address","count":5,"options":{"country":"JP"}}'
 ```
 
+> **Note:** `json_schema` is browser-only — the schema walker lives entirely in JS so it can use the same generators the UI uses. It does not appear in `/api/types`.
+
 ---
 
-## All 28 Data Types
+## All 29 Types
 
 | Category | Types |
-|----------|-------|
-| 🔑 Identifiers & Security | `uuid`, `hash`, `password`, `username` |
-| 👤 Contact & Identity | `name`, `email`, `phone`, `address`, `country`, `city`, `zipcode`, `coordinates` |
-| 💳 Financial & Sensitive | `credit_card`, `ssn`, `barcode`, `isbn` |
-| 🌐 Network & Web | `ip`, `url`, `mac_address`, `imei` |
-| 🕐 Time & Text | `date`, `datetime`, `sentence`, `paragraph` |
-| 🎨 Colors | `hex_color`, `rgb_color` |
-| 🏢 Work & Organization | `company`, `job` |
+|---|---|
+| 🔑 Identifiers & Security | `uuid` `hash` `password` `username` |
+| 👤 Contact & Identity | `name` `email` `phone` `address` `country` `city` `zipcode` `coordinates` |
+| 💳 Financial & Sensitive | `credit_card` `ssn` `barcode` `isbn` |
+| 🌐 Network & Web | `ip` `url` `mac_address` `imei` |
+| 🕐 Time & Text | `date` `datetime` `sentence` `paragraph` |
+| 🎨 Colors | `hex_color` `rgb_color` |
+| 🏢 Work & Organization | `company` `job` |
+| 📋 Schema | `json_schema` (browser-only) |
+
+---
+
+## JSON Schema → Payload
+
+Paste a JSON Schema (draft-07) **or** any JSON example. The walker auto-detects which mode it's in.
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "id":           { "type": "string", "format": "uuid" },
+    "accessToken":  { "type": "string" },
+    "email":        { "type": "string", "format": "email" },
+    "price":        { "type": "number" },
+    "rating":       { "type": "number" },
+    "expiresIn":    { "type": "integer" },
+    "tokenType":    { "type": "string", "enum": ["Bearer"] }
+  },
+  "required": ["id", "accessToken", "email"]
+}
+```
+
+Produces credible output:
+
+```json
+{
+  "id": "b0bbc742-5ea4-4f72-9051-ef455a6af0a3",
+  "accessToken": "60fd2207cd45d8d00e12e326015d0941638dc7a539476576e3dbf6386881b840",
+  "email": "casey465@example.com",
+  "price": 1826.36,
+  "rating": 4.2,
+  "expiresIn": 25000,
+  "tokenType": "Bearer"
+}
+```
+
+Supported schema keywords: `type`, `enum`, `const`, `oneOf`, `anyOf`, `allOf`, `$ref` (internal pointers), `properties`, `required`, `items` (incl. tuple), `minItems` / `maxItems`, `uniqueItems`, `minLength` / `maxLength`, `pattern` (alphanumeric placeholder), `minimum` / `maximum` / `exclusive*`, `multipleOf`, `additionalProperties`, `example`, `examples`, `default`.
+
+Supported string `format`s: `uuid`, `email` (incl. `idn-email`), `uri` / `url` / `uri-reference`, `date`, `date-time`, `time`, `ipv4`, `ipv6`, `hostname` (incl. `idn-hostname`), `password`, `binary` / `byte`.
+
+A lenient pre-parser recovers from common JSON mistakes (single quotes, trailing commas, unquoted keys, `//` and `/* */` comments) before it errors.
 
 ---
 
 ## Themes
 
-Click the theme button (top-right of the app) to switch between:
+Click the theme button (top-right) to cycle:
 
 | Theme | Mood |
 |-------|------|
@@ -233,107 +176,54 @@ Theme preference is saved in `localStorage` and persists across browser reloads.
 
 ---
 
-## Project Structure
+## Requirements
 
-```
-simple-test-data-generator/
-├── README.md                 # This file
-├── LICENSE                   # MIT License
-├── requirements.txt          # Dependencies (none required)
-└── app/
-    ├── server.py            # HTTP server (static files + API routing)
-    ├── api.py               # All 28 Python generators + REST handler
-    ├── index.html           # Web UI with 4 theme CSS blocks
-    ├── api-docs.html        # Interactive API documentation
-    ├── start.bat            # Windows launcher
-    └── js/
-        ├── app.js           # Application entry point
-        ├── store.js         # Reactive state management
-        ├── utils.js         # Utility functions
-        ├── data/
-        │   ├── categories.js # Taxonomy (7 categories, 28 types)
-        │   └── datasets.js  # Static data arrays
-        ├── generators/
-        │   ├── index.js     # Dispatcher
-        │   ├── identifiers.js
-        │   ├── contact.js
-        │   ├── financial.js
-        │   ├── network.js
-        │   ├── time_text.js
-        │   ├── colors.js
-        │   ├── work.js
-        │   └── extras.js
-        └── ui/
-            ├── tabs.js
-            ├── subtypes.js
-            ├── config.js
-            ├── results.js
-            ├── toast.js
-            └── theme.js
-```
+- **Python 3.7+** — stdlib only, nothing to install
+- A modern browser — Chrome 90+, Firefox 90+, Safari 15.4+, Edge 90+
 
 ---
 
-## Contributing
+## Project Layout
 
-Contributions are welcome! Here's how you can help:
+```
+.
+├── run.sh                  Launcher (macOS / Linux)
+├── run.bat                 Launcher (Windows)
+├── README.md
+├── LICENSE
+│
+├── app/                    Development copy (run from here)
+│   ├── index.html
+│   ├── api-docs.html
+│   ├── server.py           HTTP + API dev server (stdlib only)
+│   ├── api.py              Python re-implementation of the 28 generators
+│   ├── start.bat           Legacy Windows launcher (use ../run.bat instead)
+│   └── js/
+│       ├── app.js, store.js, utils.js
+│       ├── data/           categories.js, datasets.js
+│       ├── generators/     identifiers, contact, financial, network,
+│       │                   time_text, colors, work, extras, schema, index
+│       └── ui/             tabs, subtypes, config, results, toast, theme
+│
+└── docs/                   GitHub Pages mirror of app/ (byte-identical)
+```
 
-1. **Fork the repository**
-2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
-3. **Commit your changes** (`git commit -m 'Add amazing feature'`)
-4. **Push to the branch** (`git push origin feature/amazing-feature`)
-5. **Open a Pull Request**
+> `docs/` is a mirror of `app/`. Anything you change in `app/` should be copied to `docs/` so the Pages site stays in sync.
 
-### Ways to Contribute
+---
 
-- 🐛 Report bugs and issues
-- 💡 Suggest new data types
-- 📖 Improve documentation
-- 🎨 Add new themes
-- 🔧 Submit pull requests
+## Deploying to GitHub Pages
+
+The app is fully client-side and can be hosted on GitHub Pages without a backend.
+
+1. Make sure your changes are mirrored into `docs/` (the `docs/` folder is what Pages serves).
+2. **Repository Settings → Pages**
+3. Source: **Deploy from a branch**, branch `main`, folder `/docs`. Save.
+
+The site goes live at `https://<your-user>.github.io/<repo>/`. The `json_schema` type and all 28 client-side types work; the Python REST API is local-only.
 
 ---
 
 ## License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
-```
-MIT License
-
-Copyright (c) 2026 iamragavendran
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
----
-
-## Support
-
-If you find this project useful, please consider:
-
-- ⭐ Starring the repository
-- 🐦 Sharing it with others
-- 💖 Sponsoring the developer
-
----
-
-**Built with ❤️ for developers and QA engineers**
-
-*Generate test data quickly, test thoroughly, ship confidently!*
+[MIT](./LICENSE)

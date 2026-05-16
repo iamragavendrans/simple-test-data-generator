@@ -1,0 +1,2 @@
+# This file tells GitHub Pages not to process this site with Jekyll
+# Required because we have files starting with underscore (_) in our JS code

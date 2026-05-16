@@ -99,7 +99,7 @@
 </head>
 <body>
 <div class="page">
-  <a class="back" href="/">← Back to App</a>
+  <a class="back" href="index.html">← Back to App</a>
 
   <h1>REST API Reference</h1>
   <p class="subtitle">Full programmatic access to all 28 data generators. No auth required. Works from any client.</p>
@@ -107,10 +107,14 @@
   <!-- Base URL -->
   <h2>Base URL</h2>
   <div class="code-wrap">
+    <div class="code-label">GitHub Pages (Live)</div>
+    <pre><span class="v">https://iamragavendrans.github.io/simple-test-data-generator</span></pre>
+  </div>
+  <div class="code-wrap">
     <div class="code-label">local development</div>
     <pre><span class="v">http://localhost:8080</span></pre>
   </div>
-  <div class="note"><strong>Note:</strong> The API is served by the same <code>server.py</code> that serves the app. Start it with <code>python server.py</code> (or <code>start.bat</code> on Windows).</div>
+  <div class="note"><strong>Note:</strong> On GitHub Pages, the app runs entirely in-browser using JavaScript. The REST API backend is only available when running locally with <code>server.py</code> (or <code>start.bat</code> on Windows).</div>
 
   <!-- Endpoints -->
   <h2>Endpoints</h2>
@@ -268,7 +272,7 @@ max_value: integer   (default: 255, range: 0–255)</pre></div>
 
   <!-- Live tester -->
   <h2>Live API Tester</h2>
-  <div class="note">Requires the server to be running at <strong>http://localhost:8080</strong></div>
+  <div class="note"><strong>Note:</strong> This tester requires the Flask server to be running locally at <code>http://localhost:8080</code>. It does not work on GitHub Pages since the REST API is a Python backend feature.</div>
   <div class="tester">
     <div class="tester-row">
       <div>
