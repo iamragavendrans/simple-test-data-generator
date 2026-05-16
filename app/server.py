@@ -34,6 +34,10 @@ class AppHandler(http.server.SimpleHTTPRequestHandler):
         if self.path.startswith("/api/"):
             handle_api(self, "GET", self.path, b"")
         else:
+            # Strip If-Modified-Since so the dev server never returns 304;
+            # always serve fresh content (no stale-cache surprises).
+            if 'If-Modified-Since' in self.headers:
+                del self.headers['If-Modified-Since']
             super().do_GET()
 
     def do_POST(self):
@@ -43,6 +47,10 @@ class AppHandler(http.server.SimpleHTTPRequestHandler):
             handle_api(self, "POST", self.path, body)
         else:
             self.send_error(405, "Method Not Allowed")
+
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        super().end_headers()
 
     def log_message(self, format, *args): pass
     def log_error(self,   format, *args): pass
@@ -92,7 +100,7 @@ def main():
             print(f"\n  Port {port} is in use and no free port was found in the next 20.")
             print(f"  Try a specific port:  python3 server.py --port 9000\n")
             sys.exit(1)
-        print(f"\n  Port {port} is in use — using port {free} instead.")
+        print(f"\n  Port {port} is in use - using port {free} instead.")
         port = free
         server = http.server.HTTPServer((args.host, port), AppHandler)
 
@@ -101,15 +109,15 @@ def main():
         threading.Timer(0.4, lambda: webbrowser.open(url)).start()
 
     print()
-    print("  ╔═══════════════════════════════════════════════╗")
-    print("  ║         Test Data Generator · QA Tools        ║")
-    print("  ╚═══════════════════════════════════════════════╝")
+    print("  +-----------------------------------------------+")
+    print("  |        Test Data Generator - QA Tools         |")
+    print("  +-----------------------------------------------+")
     print()
-    print(f"  App         →  {url}")
-    print(f"  REST API    →  {url}/api/")
-    print(f"  API docs    →  {url}/api-docs.html")
+    print(f"  App      :  {url}")
+    print(f"  REST API :  {url}/api/")
+    print(f"  API docs :  {url}/api-docs.html")
     print()
-    print("     Press Ctrl+C to stop.")
+    print("  Press Ctrl+C to stop.")
     print()
 
     try:
