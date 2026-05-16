@@ -1,45 +1,84 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Python](https://img.shields.io/badge/Python-3.7%2B-blue)
+![Dependencies](https://img.shields.io/badge/Dependencies-zero-brightgreen)
 
-# Test Data Generator · QA Tools v3
+# Test Data Generator · QA Tools
 
-Pure-frontend test data generator with optional REST API backend.  
-28 data types · 7 categories · 4 themes · zero external dependencies.
+Pure-frontend test data generator with an optional REST API backend.
+**29 data types** across **8 categories**, **4 themes**, **zero external dependencies**.
 
----
-
-## 🌐 Live Demo
-
-**Hosted on GitHub Pages:** https://iamragavendrans.github.io/simple-test-data-generator/
+Includes a **JSON Schema → Payload** generator that turns a schema (or a JSON example) into realistic mock payloads — UUIDs, emails, prices, tokens — using key-name heuristics, JSON-Schema formats, `multipleOf`, `enum`, `oneOf`, `$ref`, and more.
 
 ---
 
-## Quick Start (Local Development)
+## Live Demo
+
+GitHub Pages (client-side, no backend needed):
+**https://iamragavendrans.github.io/simple-test-data-generator/**
+
+---
+
+## Quick Start
+
+You only need **Python 3.7+** — there is nothing to `pip install`. Just clone and run from the repo root:
+
+### macOS / Linux
 
 ```bash
-python server.py          # macOS / Linux
-start.bat                 # Windows
+./run.sh
 ```
 
-Browser opens at **http://localhost:8080** automatically.
+### Windows
+
+```bat
+run.bat
+```
+
+The browser opens automatically at `http://localhost:8080`.
+
+> The launchers find your Python (`python3` → `python` → `py`), `cd` into the right directory, forward CLI flags, and auto-bump to the next free port if 8080 is already in use. Press **Ctrl+C** to stop.
+
+### Run options
+
+```bash
+./run.sh --port 9000          # use a specific port
+./run.sh --no-browser         # don't open the browser
+PORT=9000 ./run.sh            # via environment variable
+./run.sh --host 0.0.0.0       # listen on all interfaces (LAN access)
+```
+
+### Manual run (if launchers are unavailable)
+
+```bash
+python3 app/server.py                # or `python` / `py -3`
+```
 
 ---
 
-## API
+## Troubleshooting
 
-The same server also exposes a REST API at **http://localhost:8080/api/**
+| Symptom | Fix |
+|---|---|
+| `command not found: python` | Install Python 3.7+ from [python.org](https://www.python.org/downloads/), or use the launcher (`./run.sh` or `run.bat`) — it auto-detects `python3`/`python`/`py`. |
+| `Port 8080 is in use` | The server now auto-picks the next free port (8081, 8082, …). To force one: `./run.sh --port 9000`. |
+| Blank page when double-clicking `index.html` | Browsers block ES module imports over `file://`. Always use the launcher — it serves over HTTP. |
+| Browser didn't open | Open the URL printed in the terminal manually, or pass `--no-browser` and click yourself. |
+| Permission denied on `./run.sh` | `chmod +x run.sh` (already executable in the repo; this re-arms it). |
 
-### Endpoints
+---
+
+## REST API
+
+The same server exposes a REST API at `http://localhost:8080/api/`. CORS is open.
 
 ```
-GET  /api/categories                          — list all categories & types
-GET  /api/types                               — flat list of all 28 type IDs
-GET  /api/generate?type={id}&count={n}        — generate via query string
-POST /api/generate  {type, count, options}    — generate via JSON body
+GET   /api/categories                          — list all categories & types
+GET   /api/types                                — flat list of all type IDs
+GET   /api/generate?type={id}&count={n}&...    — generate via query string
+POST  /api/generate  {type, count, options}    — generate via JSON body
 ```
 
-Full interactive docs at **http://localhost:8080/api-docs.html**
-
-### Examples
+Interactive docs: **http://localhost:8080/api-docs.html**
 
 ```bash
 # UUID
@@ -50,14 +89,8 @@ curl -X POST http://localhost:8080/api/generate \
   -H "Content-Type: application/json" \
   -d '{"type":"password","count":3,"options":{"length":32,"special":true}}'
 
-# MAC address with dash separator
-curl "http://localhost:8080/api/generate?type=mac_address&count=5&separator=-"
-
 # IPv6
 curl "http://localhost:8080/api/generate?type=ip&count=3&version=ipv6"
-
-# EU-format dates 1990–2024
-curl "http://localhost:8080/api/generate?type=date&count=5&format=eu&from_year=1990&to_year=2024"
 
 # Japanese addresses
 curl -X POST http://localhost:8080/api/generate \
@@ -65,9 +98,11 @@ curl -X POST http://localhost:8080/api/generate \
   -d '{"type":"address","count":5,"options":{"country":"JP"}}'
 ```
 
+> **Note:** `json_schema` is browser-only — the schema walker lives entirely in JS so it can use the same generators the UI uses. It does not appear in `/api/types`.
+
 ---
 
-## All 28 Types
+## All 29 Types
 
 | Category | Types |
 |---|---|
@@ -78,12 +113,55 @@ curl -X POST http://localhost:8080/api/generate \
 | 🕐 Time & Text | `date` `datetime` `sentence` `paragraph` |
 | 🎨 Colors | `hex_color` `rgb_color` |
 | 🏢 Work & Organization | `company` `job` |
+| 📋 Schema | `json_schema` (browser-only) |
+
+---
+
+## JSON Schema → Payload
+
+Paste a JSON Schema (draft-07) **or** any JSON example. The walker auto-detects which mode it's in.
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "id":           { "type": "string", "format": "uuid" },
+    "accessToken":  { "type": "string" },
+    "email":        { "type": "string", "format": "email" },
+    "price":        { "type": "number" },
+    "rating":       { "type": "number" },
+    "expiresIn":    { "type": "integer" },
+    "tokenType":    { "type": "string", "enum": ["Bearer"] }
+  },
+  "required": ["id", "accessToken", "email"]
+}
+```
+
+Produces credible output:
+
+```json
+{
+  "id": "b0bbc742-5ea4-4f72-9051-ef455a6af0a3",
+  "accessToken": "60fd2207cd45d8d00e12e326015d0941638dc7a539476576e3dbf6386881b840",
+  "email": "casey465@example.com",
+  "price": 1826.36,
+  "rating": 4.2,
+  "expiresIn": 25000,
+  "tokenType": "Bearer"
+}
+```
+
+Supported schema keywords: `type`, `enum`, `const`, `oneOf`, `anyOf`, `allOf`, `$ref` (internal pointers), `properties`, `required`, `items` (incl. tuple), `minItems` / `maxItems`, `uniqueItems`, `minLength` / `maxLength`, `pattern` (alphanumeric placeholder), `minimum` / `maximum` / `exclusive*`, `multipleOf`, `additionalProperties`, `example`, `examples`, `default`.
+
+Supported string `format`s: `uuid`, `email` (incl. `idn-email`), `uri` / `url` / `uri-reference`, `date`, `date-time`, `time`, `ipv4`, `ipv6`, `hostname` (incl. `idn-hostname`), `password`, `binary` / `byte`.
+
+A lenient pre-parser recovers from common JSON mistakes (single quotes, trailing commas, unquoted keys, `//` and `/* */` comments) before it errors.
 
 ---
 
 ## Themes
 
-Click the theme button (top-right of the app) to switch between:
+Click the theme button (top-right) to cycle:
 
 | Theme | Mood |
 |---|---|
@@ -98,84 +176,52 @@ Theme is saved in `localStorage` and persists across reloads.
 
 ## Requirements
 
-- Python 3.7+ (stdlib only — no pip install needed)
-- Modern browser: Chrome 90+, Firefox 90+, Safari 15.4+, Edge 90+
+- **Python 3.7+** — stdlib only, nothing to install
+- A modern browser — Chrome 90+, Firefox 90+, Safari 15.4+, Edge 90+
 
 ---
 
-## Files
+## Project Layout
 
 ```
-app/
-  index.html          app shell + 4 theme CSS blocks
-  api-docs.html       interactive API documentation
-  server.py           HTTP server (static files + API routing)
-  api.py              all 28 Python generators + REST handler
-  start.bat           Windows launcher
-  js/
-    app.js            entry point
-    store.js          reactive state
-    utils.js          randInt, choice, Luhn
-    data/
-      categories.js   taxonomy (7 categories, 28 types with options schema)
-      datasets.js     static data arrays
-    generators/
-      index.js        dispatcher
-      identifiers.js  uuid, password, username, imei, mac
-      contact.js      name, email, phone, address, country, city, zip
-      financial.js    credit_card, ssn, barcode, isbn
-      network.js      ip, url
-      time_text.js    datetime, sentence, paragraph
-      colors.js       hex_color, rgb_color
-      work.js         company, job
-      extras.js       hash, coordinates, date
-    ui/
-      tabs.js         category tab bar
-      subtypes.js     type list with groups + search
-      config.js       config panel
-      results.js      results list + copy
-      toast.js        notification
-      theme.js        theme toggle (4 themes, localStorage)
-docs/                   GitHub Pages static files (copy of app/)
+.
+├── run.sh                  Launcher (macOS / Linux)
+├── run.bat                 Launcher (Windows)
+├── README.md
+├── LICENSE
+│
+├── app/                    Development copy (run from here)
+│   ├── index.html
+│   ├── api-docs.html
+│   ├── server.py           HTTP + API dev server (stdlib only)
+│   ├── api.py              Python re-implementation of the 28 generators
+│   ├── start.bat           Legacy Windows launcher (use ../run.bat instead)
+│   └── js/
+│       ├── app.js, store.js, utils.js
+│       ├── data/           categories.js, datasets.js
+│       ├── generators/     identifiers, contact, financial, network,
+│       │                   time_text, colors, work, extras, schema, index
+│       └── ui/             tabs, subtypes, config, results, toast, theme
+│
+└── docs/                   GitHub Pages mirror of app/ (byte-identical)
 ```
+
+> `docs/` is a mirror of `app/`. Anything you change in `app/` should be copied to `docs/` so the Pages site stays in sync.
 
 ---
 
 ## Deploying to GitHub Pages
 
-This app is fully client-side and can be hosted on GitHub Pages without any backend.
+The app is fully client-side and can be hosted on GitHub Pages without a backend.
 
-### Option 1: Use the `docs/` folder (Recommended)
+1. Make sure your changes are mirrored into `docs/` (the `docs/` folder is what Pages serves).
+2. **Repository Settings → Pages**
+3. Source: **Deploy from a branch**, branch `main`, folder `/docs`. Save.
 
-1. Copy all contents from `app/` to `docs/` folder
-2. Go to Repository Settings → Pages
-3. Select "Deploy from a branch"
-4. Choose `main` branch and `/docs` folder
-5. Save
+The site goes live at `https://<your-user>.github.io/<repo>/`. The `json_schema` type and all 28 client-side types work; the Python REST API is local-only.
 
-The app will be available at: `https://iamragavendrans.github.io/simple-test-data-generator/`
+---
 
-### Option 2: Deploy from root
+## License
 
-1. Move all contents from `app/` to the repository root
-2. Go to Repository Settings → Pages
-3. Select "Deploy from a branch"
-4. Choose `main` branch and `/ (root)` folder
-5. Save
-
-### Note
-
-- The Flask server (`server.py`, `api.py`) is only for local development
-- The GitHub Pages version uses client-side JavaScript generation (all 28 types work!)
-- API documentation (`api-docs.html`) demonstrates the backend API but requires running the Flask server locally
-
-### ⚠️ Important: Local File Limitations
-
-When opening `index.html` directly via `file://` (double-clicking the file):
-- Some browsers block module imports due to CORS restrictions
-- You may see a blank screen or errors in the console
-- **Solution**: Use a local server for development:
-  ```bash
-  python server.py  # or start.bat on Windows
-  ```
-- GitHub Pages serves files via HTTP, which works perfectly!
+[MIT](./LICENSE)
